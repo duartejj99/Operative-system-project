@@ -1,6 +1,6 @@
-#include <cpu.h>
-#include <inttypes.h>
-
+#include "cpu.h"
+#include "inttypes.h"
+#include "screen.h"
 // on peut s'entrainer a utiliser GDB avec ce code de base
 // par exemple afficher les valeurs de x, n et res avec la commande display
 
@@ -19,11 +19,19 @@ uint32_t fact(uint32_t n)
 
 void kernel_start(void)
 {
-    uint32_t x = fact(5);
+    int ptr_size = sizeof(uint32_t *);
+    int data_size = sizeof(uint32_t);
 
+    uint32_t x = fact(5);
+    char c = 'h';
+
+    write_char(10,20,c);
 
     // quand on saura gerer l'ecran, on pourra afficher x
     (void)x;
+    (void)ptr_size;
+    (void)data_size;
+
     // on ne doit jamais sortir de kernel_start
     while (1) {
         // cette fonction arrete le processeur

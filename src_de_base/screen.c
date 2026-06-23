@@ -1,5 +1,5 @@
-#include "../cpu.h"
-#include "../inttypes.h"
+#include "cpu.h"
+#include "inttypes.h"
 
 const uint16_t VGA_DATA_PORT = 0x3D4;
 const uint16_t VGA_COMMAND_PORT = 0x3D5;
@@ -36,4 +36,9 @@ uint32_t *mem_ptr(uint32_t line, uint32_t col) {
 
 
     return (uint32_t *) (2 * (line * 80 + col) );
+}
+
+void write_char(uint32_t line, uint32_t col, char c) {
+    uint32_t * mem_zone = mem_ptr(line, col);
+    *mem_zone = (uint32_t)c;
 }

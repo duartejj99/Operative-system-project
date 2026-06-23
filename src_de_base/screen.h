@@ -4,3 +4,7 @@
  *
  * Here are all the functions related to the terminal screen management.
  */
+
+#include "inttypes.h"
+
+void write_char(uint32_t line, uint32_t col, char c);
