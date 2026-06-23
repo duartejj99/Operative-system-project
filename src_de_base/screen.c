@@ -35,10 +35,11 @@ void send_data_to_screen(uint16_t data) {
 uint32_t *mem_ptr(uint32_t line, uint32_t col) {
 
 
-    return (uint32_t *) (2 * (line * 80 + col) );
+    return (uint32_t *) (0xB8000 + 2 * (line * 80 + col) );
 }
 
 void write_char(uint32_t line, uint32_t col, char c) {
     uint32_t * mem_zone = mem_ptr(line, col);
-    *mem_zone = (uint32_t)c;
+    uint32_t char_format = 0x0F;    // high byte is the config
+    *mem_zone = (char_format << 8) + (uint32_t)c; // Low byte is the char
 }

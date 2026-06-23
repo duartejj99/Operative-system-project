@@ -23,9 +23,10 @@ void kernel_start(void)
     int data_size = sizeof(uint32_t);
 
     uint32_t x = fact(5);
-    char c = 'h';
+    char c = 'j';
 
     write_char(10,20,c);
+    write_char(10,21,c);
 
     // quand on saura gerer l'ecran, on pourra afficher x
     (void)x;
