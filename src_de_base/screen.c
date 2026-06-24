@@ -28,6 +28,7 @@ uint16_t *mem_ptr(uint32_t line, uint32_t col);
 void write_char(uint32_t line, uint32_t col, char c);
 void set_cursor_position(uint16_t cursor_position);
 void place_cursor(uint32_t line, uint32_t col);
+void clean_screen();
 
 
 void char_treatment(char c) {
@@ -35,9 +36,9 @@ void char_treatment(char c) {
     // ASCII code from 32 to 126
     if (c >= 32 && c <= 126) {
         write_char(cursor_line, cursor_col, c);
-        
+
         if (cursor_col == 79) {
-            if (cursor_line == 24) 
+            if (cursor_line == 24)
                 cursor_line = 0;
             cursor_line++;
             cursor_col = 0;
@@ -45,11 +46,58 @@ void char_treatment(char c) {
         cursor_col = (cursor_col + 1) % 80;
     }
 
+    // Treat control characters
+    if (c >= 0 && c <= 31) {
+        // 8, 9, 10, 12, 13
+        switch (c) {
+            // Backspace BS
+            case 8: {
+                if (cursor_col == 0)
+                    break;
+
+                cursor_col--;
+                // write_char(cursor_line, cursor_col,' ');
+                break;
+            }
+            // Horizontal tab HT
+            case 9: {
+                cursor_col = cursor_col + (8 - (cursor_col % 8));
+
+                if (cursor_col == 80) {
+                    cursor_line++;
+                    cursor_col = 0;
+                }
+                break;
+            }
+            // Line feed LF
+            case 10: {
+                cursor_col = 0;
+                if (cursor_line == 79) {
+                    cursor_line = 0;
+                }
+                cursor_line++;
+                break;
+            }
+            // Form feed FF
+            case 12: {
+                clean_screen();
+                cursor_col = 0;
+                cursor_line = 0;
+                break;
+            }
+            // Carriage return CR
+            case 13: {
+                cursor_col = 0;
+                break;
+            }
+
+            default:{
+                // The other cases are not treated, and are silently ignored
+            }
+        }
+    }
+
     place_cursor(cursor_line, cursor_col);
-    
-    // if (c >= 0 && c <= 31) {
-    //     // 8, 9, 10, 12, 13
-    // }
 }
 
 
