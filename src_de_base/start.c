@@ -23,12 +23,24 @@ void kernel_start(void)
     int data_size = sizeof(uint32_t);
 
     uint32_t x = fact(5);
-    char c = 'j';
+    // char c = 'j';
 
     clean_screen();
-    write_char(10,20,c);
-    write_char(10,21,c);
-    place_cursor(10,21);
+    // write_char(10,20,c);
+    // write_char(10,21,c);
+    // place_cursor(10,21);
+    char_treatment('H');
+    char_treatment('o');
+    char_treatment('l');
+    char_treatment('a');
+
+    // place_cursor(0,1);
+    // place_cursor(0,2);
+    // place_cursor(0,3);
+    // place_cursor(0,4); // something happens here
+    // place_cursor(0,5);
+    // place_cursor(0,6);
+
 
     // quand on saura gerer l'ecran, on pourra afficher x
     (void)x;
