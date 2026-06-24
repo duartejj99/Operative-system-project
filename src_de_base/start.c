@@ -25,8 +25,10 @@ void kernel_start(void)
     uint32_t x = fact(5);
     char c = 'j';
 
+    clean_screen();
     write_char(10,20,c);
     write_char(10,21,c);
+    place_cursor(10,21);
 
     // quand on saura gerer l'ecran, on pourra afficher x
     (void)x;
