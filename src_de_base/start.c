@@ -28,7 +28,9 @@ void kernel_start(void)
     clean_screen();
     // write_char(10,20,c);
     // write_char(10,21,c);
-    // place_cursor(10,21);
+    place_cursor(24,0);
+    char_treatment('\n');
+    //
     char_treatment('M');
     char_treatment('a');
     char_treatment('l');
@@ -47,6 +49,7 @@ void kernel_start(void)
     char_treatment('\n');
     char_treatment('\t');
     char_treatment('\t');
+    scrolling();
     char_treatment('\r');
     char_treatment('\f');
 

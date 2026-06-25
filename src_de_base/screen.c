@@ -1,5 +1,6 @@
 #include "cpu.h"
-#include "inttypes.h"
+#include <inttypes.h>
+#include <string.h>
 // #include <assert.h>
 
 const uint16_t VGA_COMMAND_PORT = 0x3D4;
@@ -30,6 +31,21 @@ void set_cursor_position(uint16_t cursor_position);
 void place_cursor(uint32_t line, uint32_t col);
 void clean_screen();
 
+
+void scrolling() {
+    void * screen_part_to_copy = mem_ptr(1, 0);
+    void * screen_begin = mem_ptr(0, 0);
+    uint32_t screen_data_size_to_copy = 24 * 80 * 2;
+    memmove(screen_begin, screen_part_to_copy, screen_data_size_to_copy);
+    // delete the last screen line
+    for (int col = 0; col < 80; col++){
+        write_char(24, col, ' ');
+    }
+
+    // Should I move the cursor or not? serious question.
+    if(cursor_line != 0)
+        place_cursor(cursor_line -1, cursor_col);
+}
 
 void char_treatment(char c) {
     // from 0 to 31 control characters and 127
@@ -72,10 +88,7 @@ void char_treatment(char c) {
             // Line feed LF
             case 10: {
                 cursor_col = 0;
-                if (cursor_line == 79) {
-                    cursor_line = 0;
-                }
-                cursor_line++;
+                cursor_line = (cursor_line + 1) % 25;
                 break;
             }
             // Form feed FF
@@ -102,8 +115,10 @@ void char_treatment(char c) {
 
 
 void place_cursor(uint32_t line, uint32_t col) {
-  uint16_t cursor_position =  (line * 80 + col);
-  set_cursor_position(cursor_position);
+    cursor_line = line;
+    cursor_col = col;
+    uint16_t cursor_position =  (line * 80 + col);
+    set_cursor_position(cursor_position);
 }
 
 void clean_screen() {
