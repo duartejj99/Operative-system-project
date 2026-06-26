@@ -6,6 +6,9 @@
 const uint16_t VGA_COMMAND_PORT = 0x3D4;
 const uint16_t VGA_DATA_PORT = 0x3D5;
 
+const uint8_t SCREEN_WIDTH = 80;
+const uint8_t SCREEN_HEIGHT = 25;
+
 // Here I will detail the specifications of the screen we are working with.
 // The screen is a 80 col x 25 lines grid. [25 lines x 80 cols] = 2000 cells
 // Each cell is composed by 2 bytes : 1 byte for the character + 1 byte for the format
@@ -40,16 +43,16 @@ void console_putbytes(const char *s, int len) {
 void scrolling() {
     void * screen_part_to_copy = mem_ptr(1, 0);
     void * screen_begin = mem_ptr(0, 0);
-    uint32_t screen_data_size_to_copy = 24 * 80 * 2;
+    uint32_t screen_data_size_to_copy = (SCREEN_HEIGHT - 1) * SCREEN_WIDTH * 2;
     memmove(screen_begin, screen_part_to_copy, screen_data_size_to_copy);
     // delete the last screen line
-    for (int col = 0; col < 80; col++){
-        write_char(24, col, ' ');
+    for (int col = 0; col < SCREEN_WIDTH; col++){
+        write_char(SCREEN_HEIGHT - 1, col, ' ');
     }
 
     // Should I move the cursor or not? serious question.
     if(cursor_line != 0)
-        place_cursor(cursor_line -1, cursor_col);
+        place_cursor(cursor_line - 1, cursor_col);
     else
         place_cursor(0, 0);
 }
@@ -60,8 +63,8 @@ void char_treatment(char c) {
     if (c >= 32 && c <= 126) {
         write_char(cursor_line, cursor_col, c);
 
-        if (cursor_col == 79) {
-            if (cursor_line == 24)
+        if (cursor_col == SCREEN_WIDTH - 1) {
+            if (cursor_line == SCREEN_HEIGHT - 1)
                 cursor_line = 0;
             cursor_line++;
             cursor_col = 0;
@@ -86,7 +89,7 @@ void char_treatment(char c) {
             case 9: {
                 cursor_col = cursor_col + (8 - (cursor_col % 8));
 
-                if (cursor_col == 80) {
+                if (cursor_col == SCREEN_WIDTH) {
                     cursor_line++;
                     cursor_col = 0;
                 }
@@ -95,7 +98,7 @@ void char_treatment(char c) {
             // Line feed LF
             case 10: {
                 cursor_col = 0;
-                cursor_line = (cursor_line + 1) % 25;
+                cursor_line = (cursor_line + 1) % SCREEN_HEIGHT;
                 break;
             }
             // Form feed FF
@@ -124,13 +127,13 @@ void char_treatment(char c) {
 void place_cursor(uint32_t line, uint32_t col) {
     cursor_line = line;
     cursor_col = col;
-    uint16_t cursor_position =  (line * 80 + col);
+    uint16_t cursor_position =  (line * SCREEN_WIDTH + col);
     set_cursor_position(cursor_position);
 }
 
 void clean_screen() {
-    for (int l= 0; l < 25; l++) {
-        for (int c = 0; c < 80; c++)
+    for (int l= 0; l < SCREEN_HEIGHT; l++) {
+        for (int c = 0; c < SCREEN_WIDTH; c++)
         write_char(l, c, ' ');
     }
     place_cursor(0, 0);
@@ -163,5 +166,5 @@ uint16_t *mem_ptr(uint32_t line, uint32_t col) {
     // assert(line < 25);
     // assert(col >= 0);
     // assert(col < 80);
-    return (uint16_t *) (0xB8000 + 2 * (line * 80 + col) );
+    return (uint16_t *) (0xB8000 + 2 * (line * SCREEN_WIDTH + col) );
 }
