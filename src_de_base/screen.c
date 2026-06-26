@@ -30,7 +30,12 @@ void write_char(uint32_t line, uint32_t col, char c);
 void set_cursor_position(uint16_t cursor_position);
 void place_cursor(uint32_t line, uint32_t col);
 void clean_screen();
+void char_treatment(char c);
 
+void console_putbytes(const char *s, int len) {
+    for (int i = 0; i < len; i++)
+        char_treatment(s[i]);
+}
 
 void scrolling() {
     void * screen_part_to_copy = mem_ptr(1, 0);
@@ -45,6 +50,8 @@ void scrolling() {
     // Should I move the cursor or not? serious question.
     if(cursor_line != 0)
         place_cursor(cursor_line -1, cursor_col);
+    else
+        place_cursor(0, 0);
 }
 
 void char_treatment(char c) {
@@ -126,6 +133,7 @@ void clean_screen() {
         for (int c = 0; c < 80; c++)
         write_char(l, c, ' ');
     }
+    place_cursor(0, 0);
 }
 
 /**
