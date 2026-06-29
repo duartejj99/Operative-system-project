@@ -2,6 +2,7 @@
 #include "inttypes.h"
 #include "screen.h"
 #include "stdio.h"
+#include "time.h"
 // on peut s'entrainer a utiliser GDB avec ce code de base
 // par exemple afficher les valeurs de x, n et res avec la commande display
 
@@ -33,6 +34,8 @@ void kernel_start(void)
     char_treatment('\r');
     char_treatment('\f');
     printf("This is the value of x: %d", x);
+    char * time = "HH:MM:SS";
+    write_time(time, 8);
 
     // on ne doit jamais sortir de kernel_start
     while (1) {

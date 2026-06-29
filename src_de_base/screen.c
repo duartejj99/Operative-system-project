@@ -1,7 +1,7 @@
 #include "cpu.h"
 #include <inttypes.h>
 #include <string.h>
-// #include <assert.h>
+#include <screen.h>
 
 const uint16_t VGA_COMMAND_PORT = 0x3D4;
 const uint16_t VGA_DATA_PORT = 0x3D5;
