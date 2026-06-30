@@ -36,7 +36,7 @@ void kernel_start(void)
     printf("This is the value of x: %d", x);
     char * time = "HH:MM:SS";
     write_time(time, 8);
-
+    tic_PIT();
     // on ne doit jamais sortir de kernel_start
     while (1) {
         // cette fonction arrete le processeur
