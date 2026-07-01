@@ -35,7 +35,7 @@ const uint8_t IRQ_MASK_DATA_PORT = 0x21;
 const uint8_t CLK_IT_NUMBER = 0x20;
 const uint16_t CLK_FREQ_HZ = 50;
 
-const uint8_t COMMAND_PORT_IT_NOTIF = 0x20;
+const uint8_t IT_CONTROLLER_COMMAND_PORT = 0x20;
 
 uint32_t clk_ticks = 0;
 char *time_display = "";
@@ -67,9 +67,8 @@ void write_time(char *time_as_string, uint32_t string_size) {
 void tic_PIT() {
     // 1. We communicate to the Interruption controler we are treating the IT, so
     // it can listen to other ITs
-    outb(CLK_IT_NUMBER, COMMAND_PORT_IT_NOTIF);
+    outb(CLK_IT_NUMBER, IT_CONTROLLER_COMMAND_PORT);
     clk_ticks++;
-    write_time(time_display, 32);
 
     uint8_t seconds = 10;
     uint8_t minutes = 12;
@@ -88,4 +87,24 @@ void tic_PIT() {
     sprintf(time_display, "%02d:%02d:%02d", hours, minutes, seconds);
     write_time(time_display, 8);
 
+}
+
+/*
+ * Initializes the Interruption description table (IDT) entry.
+ *
+ * It writes on the interruption case identified by its number, the corresponding interruption treatment function pointer
+ * with a fixed configuration.
+ */
+void initialize_idt_entry(uint32_t it_number, void (*it_treatment_fn)(void)) {
+    // it_number should be between 0 and 256. There are only 256 interruptions on x86
+
+    uint32_t * idt_entry = (uint32_t *)IDT_ADDR + it_number;
+    uint32_t it_treatment_addr_lo = ((uint32_t)it_treatment_fn & 0xFF);
+    uint32_t it_treatment_addr_hi = ((uint32_t)it_treatment_fn & 0xFF00);
+
+    // 1st word
+    *idt_entry = KERNEL_CS << 16 | it_treatment_addr_lo;
+    idt_entry++;
+    // 2nd word
+    *idt_entry =  it_treatment_addr_hi | IT_CONFIG;
 }
