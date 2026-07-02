@@ -68,8 +68,9 @@ void char_treatment(char c) {
                 cursor_line = 0;
             cursor_line++;
             cursor_col = 0;
+        } else {
+            cursor_col = (cursor_col + 1) % 80;
         }
-        cursor_col = (cursor_col + 1) % 80;
     }
 
     // Treat control characters
