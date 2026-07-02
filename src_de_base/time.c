@@ -93,7 +93,10 @@ const uint8_t IT_CONTROLLER_COMMAND_PORT = 0x20;
  * A second is pass when the clk has ticked CLK_FREQ_HZ times.
  */
 uint32_t clk_ticks = 0;
-char *time_display = "";
+char time_display[15];
+uint8_t seconds = 0;
+uint8_t minutes = 0;
+uint8_t hours = 0;
 
 // const CLOCK_FREQ
 
@@ -125,23 +128,22 @@ void tic_PIT() {
     outb(CLK_IT_NUMBER, IT_CONTROLLER_COMMAND_PORT);
     clk_ticks++;
 
-    uint8_t seconds = 10;
-    uint8_t minutes = 12;
-    uint8_t hours = 3;
-    if (clk_ticks == CLK_FREQ_HZ) {
+    if (clk_ticks == (CLK_FREQ_HZ)) {
         clk_ticks = 0;
         seconds++;
         if (seconds == 60) {
             minutes++;
+            seconds = 0;
         }
         if (minutes == 60) {
             hours++;
             minutes = 0;
         }
+        sprintf(time_display, "%02d:%02d:%02d", hours, minutes, seconds);
+        write_time(time_display, 8);
     }
 
-    sprintf(time_display, "%02d:%02d:%02d", hours, minutes, seconds);
-    write_time(time_display, 8);
+
 
 }
 
