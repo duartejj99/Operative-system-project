@@ -153,9 +153,10 @@ void tic_PIT() {
 void initialize_idt_entry(uint32_t it_number, void (*it_treatment_fn)(void)) {
     // it_number should be between 0 and 256. There are only 256 interruptions on x86
 
-    uint32_t * idt_entry = (uint32_t *)IDT_ADDR + it_number;
-    uint32_t it_treatment_addr_lo = ((uint32_t)it_treatment_fn & 0xFF);
-    uint32_t it_treatment_addr_hi = ((uint32_t)it_treatment_fn & 0xFF00);
+    // each entry occupies 8 bytes so the index should inc/dec each 8 bytes.
+    uint32_t * idt_entry = (uint32_t *)IDT_ADDR + it_number * 2;
+    uint32_t it_treatment_addr_lo = ((uint32_t)it_treatment_fn & 0xFFFF);
+    uint32_t it_treatment_addr_hi = ((uint32_t)it_treatment_fn & 0xFFFF0000);
 
     // 1st word
     *idt_entry = KERNEL_CS << 16 | it_treatment_addr_lo;
