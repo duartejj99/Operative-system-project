@@ -27,7 +27,7 @@ void kernel_start(void)
     char_treatment('\n');
     printf("Malika, I implemented printf ;) habibi");
     initialize_idt_entry(32, traitant_IT_32);
-    tic_PIT();
+    mask_IRQ(0, false);
 
 
     // on ne doit jamais sortir de kernel_start

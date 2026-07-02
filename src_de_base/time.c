@@ -3,7 +3,7 @@
 #include "screen.h"
 #include "segment.h"
 #include "stdio.h"
-
+#include "stdbool.h"
 // PIT configuration:
 /*
  * PIT default clock signal frequency on HZ
@@ -172,4 +172,20 @@ void initialize_clk_frequency() {
     outb(PIT_IO_COMMAND_DATA, PIT_IO_COMMAND_PORT);
     outb(PIT_RELOAD_VALUE & 0xFF, PIT_IO_CHANNEL_0);
     outb(((PIT_RELOAD_VALUE & 0xFF00) >> 8), PIT_IO_CHANNEL_0);
+}
+
+// 1 mask
+// 0 authorized
+void mask_IRQ(uint32_t num_IRQ, bool mask) {
+    uint8_t irq_bitmap_mask = inb(IRQ_MASK_DATA_PORT);
+    uint8_t mask_to_apply;
+    if (mask) {
+        mask_to_apply = 1 << num_IRQ;
+        irq_bitmap_mask = irq_bitmap_mask | mask_to_apply;
+    }else{
+        mask_to_apply = ~(1<<num_IRQ);
+        irq_bitmap_mask = irq_bitmap_mask & mask_to_apply;
+    }
+
+    outb(irq_bitmap_mask, IRQ_MASK_DATA_PORT);
 }
