@@ -129,6 +129,7 @@ void tic_PIT() {
     uint8_t minutes = 12;
     uint8_t hours = 3;
     if (clk_ticks == CLK_FREQ_HZ) {
+        clk_ticks = 0;
         seconds++;
         if (seconds == 60) {
             minutes++;
