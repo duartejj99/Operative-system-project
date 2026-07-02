@@ -30,6 +30,7 @@ void kernel_start(void)
     mask_IRQ(0, false);
 
 
+    sti();
     // on ne doit jamais sortir de kernel_start
     while (1) {
         // cette fonction arrete le processeur

@@ -118,9 +118,11 @@ void write_time(char *time_as_string, uint32_t string_size) {
     printf(time_as_string, "%s");
 }
 
-// If we are here is because the clk ticked
 /*
  * Programmable Interval Timer Interruption treatment
+ *
+ * The interruption is sent from the interruption controller
+ * to the processor.
  */
 void tic_PIT() {
     // 1. We communicate to the Interruption controler we are treating the IT, so
@@ -172,6 +174,8 @@ void initialize_clk_frequency() {
     outb(PIT_IO_COMMAND_DATA, PIT_IO_COMMAND_PORT);
     outb(PIT_RELOAD_VALUE & 0xFF, PIT_IO_CHANNEL_0);
     outb(((PIT_RELOAD_VALUE & 0xFF00) >> 8), PIT_IO_CHANNEL_0);
+
+    sprintf(time_display, "%02d:%02d:%02d", hours, minutes, seconds);
 }
 
 // 1 mask
