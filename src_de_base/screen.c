@@ -1,7 +1,7 @@
 #include "cpu.h"
 #include <inttypes.h>
 #include <string.h>
-// #include <assert.h>
+#include <screen.h>
 
 const uint16_t VGA_COMMAND_PORT = 0x3D4;
 const uint16_t VGA_DATA_PORT = 0x3D5;
@@ -68,8 +68,9 @@ void char_treatment(char c) {
                 cursor_line = 0;
             cursor_line++;
             cursor_col = 0;
+        } else {
+            cursor_col = (cursor_col + 1) % 80;
         }
-        cursor_col = (cursor_col + 1) % 80;
     }
 
     // Treat control characters
