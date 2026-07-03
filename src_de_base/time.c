@@ -4,6 +4,8 @@
 #include "segment.h"
 #include "stdio.h"
 #include "stdbool.h"
+#include "debug.h"
+
 // PIT configuration:
 /*
  * PIT default clock signal frequency on HZ
@@ -98,18 +100,6 @@ uint8_t seconds = 0;
 uint8_t minutes = 0;
 uint8_t hours = 0;
 
-// const CLOCK_FREQ
-
-// TODO:
-//
-// 1. IDT entry initialization on the index number 32.
-// 2. Clock frequency initialization
-// 3.Deactivate others interruptions while my interruption is running (This is
-// necessary? it's not explicitely said)
-// 4. Count until 1 sec
-// 4.Activate back when my interruption finishes (said)
-//
-
 /*
  * Writes on the Upper right corner, the time since the system booted
  */
@@ -130,7 +120,7 @@ void tic_PIT() {
     outb(CLK_IT_NUMBER, IT_CONTROLLER_COMMAND_PORT);
     clk_ticks++;
 
-    if (clk_ticks == (CLK_FREQ_HZ)) {
+    if (clk_ticks == CLK_FREQ_HZ/3) {
         clk_ticks = 0;
         seconds++;
         if (seconds == 60) {
@@ -144,9 +134,6 @@ void tic_PIT() {
         sprintf(time_display, "%02d:%02d:%02d", hours, minutes, seconds);
         write_time(time_display, 8);
     }
-
-
-
 }
 
 /*
@@ -157,7 +144,8 @@ void tic_PIT() {
  */
 void initialize_idt_entry(uint32_t it_number, void (*it_treatment_fn)(void)) {
     // it_number should be between 0 and 256. There are only 256 interruptions on x86
-
+    assert(it_number >= 0);
+    assert(it_number <= 255);
     // each entry occupies 8 bytes so the index should inc/dec each 8 bytes.
     uint32_t * idt_entry = (uint32_t *)IDT_ADDR + it_number * 2;
     uint32_t it_treatment_addr_lo = ((uint32_t)it_treatment_fn & 0xFFFF);
@@ -170,6 +158,16 @@ void initialize_idt_entry(uint32_t it_number, void (*it_treatment_fn)(void)) {
     *idt_entry =  it_treatment_addr_hi | IT_CONFIG;
 }
 
+/*
+ * Configure the PIT signal frequency emmition.
+ *
+ * Normally it emits a signal with a `QUARTZ` frequency.
+ * Here we configure it to emit a signal with a `CLK_FREQ_HZ` frequency.
+ *
+ * In this case the constants configure the clock to do so on PIT channel 0.
+ *
+ * For more info, see `PIT_IO_COMMAND_DATA` description
+ */
 void initialize_clk_frequency() {
     outb(PIT_IO_COMMAND_DATA, PIT_IO_COMMAND_PORT);
     outb(PIT_RELOAD_VALUE & 0xFF, PIT_IO_CHANNEL_0);
@@ -178,8 +176,13 @@ void initialize_clk_frequency() {
     sprintf(time_display, "%02d:%02d:%02d", hours, minutes, seconds);
 }
 
-// 1 mask
-// 0 authorized
+/*
+ * Mask/Unmask the interruption number `num_IRQ`
+ * on the Programmable interruption controller.
+ *
+ * A mask set to true, means the controller ignores the interruption.
+ * Otherwise, it communicates the interruption to the processor.
+ */
 void mask_IRQ(uint32_t num_IRQ, bool mask) {
     uint8_t irq_bitmap_mask = inb(IRQ_MASK_DATA_PORT);
     uint8_t mask_to_apply;
