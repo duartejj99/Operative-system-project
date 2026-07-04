@@ -5,16 +5,17 @@
 #include "stdio.h"
 #include "stdbool.h"
 #include "debug.h"
+#include "time.h"
 
 // PIT configuration:
 /*
  * PIT default clock signal frequency on HZ
  */
-const uint32_t QUARTZ = 0x1234DD;
+static const uint32_t QUARTZ = 0x1234DD;
 /*
  * The desired PIT clock signal frequency on HZ we want to set
  */
-const uint16_t CLK_FREQ_HZ = 50;
+static const uint16_t CLK_FREQ_HZ = 50;
 
 /*
  * The reload value communicated to the PIT to configure the frequency of
@@ -27,7 +28,7 @@ const uint16_t CLK_FREQ_HZ = 50;
  * at a frequency of CLK_FREQ_HZ.
  * freq = QUARTZ / PIT_RELOAD_VALUE
  */
-const uint16_t PIT_RELOAD_VALUE = QUARTZ/CLK_FREQ_HZ;
+static const uint16_t PIT_RELOAD_VALUE = QUARTZ/CLK_FREQ_HZ;
 
 /*
  * PIT Input/Output Mode/Command port
@@ -38,7 +39,7 @@ const uint16_t PIT_RELOAD_VALUE = QUARTZ/CLK_FREQ_HZ;
  * For more info:
  * https://wiki.osdev.org/Programmable_Interval_Timer
  */
-const uint8_t PIT_IO_COMMAND_PORT = 0x43;
+static const uint8_t PIT_IO_COMMAND_PORT = 0x43;
 /*
  * Mode/Command register configuration.
  *
@@ -54,13 +55,12 @@ const uint8_t PIT_IO_COMMAND_PORT = 0x43;
  * https://wiki.osdev.org/Programmable_Interval_Timer
  *
  */
-const uint8_t PIT_IO_COMMAND_DATA = 0x34;
+static const uint8_t PIT_IO_COMMAND_DATA = 0x34;
 
 /* PIT Input/Output port corresponding to Channel 0
  * This channel is connected to IRQ0 (Interruption controller)
  */
-const uint8_t PIT_IO_CHANNEL_0 = 0x40;
-
+static const uint8_t PIT_IO_CHANNEL_0 = 0x40;
 
 /*
  * Interruption Description Table:
@@ -71,40 +71,61 @@ const uint8_t PIT_IO_CHANNEL_0 = 0x40;
  * We should initialize the entry that corresponds to
  * the interruption we want to manage.
  */
-const uint32_t *IDT_ADDR = (uint32_t *)0x1000;
+static const uint32_t *IDT_ADDR = (uint32_t *)0x1000;
 /*
  * Interruption configuration to mask other interruptions while
  * my interruption treatment is being executed.
  *
  * This means my interruption itself cannot be interrupted.
  */
-const uint32_t IT_CONFIG = 0x8E00;
+static const uint32_t IT_CONFIG = 0x8E00;
 /*
  * Data port to read the current IRQ bitmap Mask
  * IRQ: Interruption ReQuest bitmap
  */
-const uint8_t IRQ_MASK_DATA_PORT = 0x21;
+static const uint8_t IRQ_MASK_DATA_PORT = 0x21;
 /*
  * The interruption treated is the number 32 (0x20)
  */
-const uint8_t CLK_IT_NUMBER = 0x20;
-const uint8_t IT_CONTROLLER_COMMAND_PORT = 0x20;
+static const uint8_t CLK_IT_NUMBER = 0x20;
+static const uint8_t IT_CONTROLLER_COMMAND_PORT = 0x20;
 /*
  * Number of clock ticks since the last second past.
  *
  * A second is pass when the clk has ticked CLK_FREQ_HZ times.
  */
-uint32_t clk_ticks = 0;
-char time_display[15];
-uint8_t seconds = 0;
-uint8_t minutes = 0;
-uint8_t hours = 0;
+static uint32_t clk_ticks = 0;
+static char time_display[15];
+static uint8_t seconds = 0;
+static uint8_t minutes = 0;
+static uint8_t hours = 0;
+
+static void initialize_idt_entry(uint32_t it_number, void (*it_treatment_fn)(void));
+static void initialize_clk_frequency();
+static void mask_IRQ(uint32_t num_IRQ, bool mask);
+static void increment_timer_in_one_sec();
+
+
+/*
+ * Setup the PIT interruption configuration
+ * needed to be received and treated by the system.
+ *
+ * First initialize the corresponding IDT entry,
+ * change the PIT clock signal frequency
+ * And unmask the interruption on the PIC.
+ */
+void init_pit_interruption_config() {
+    // Interruption initialization
+    initialize_idt_entry(32, traitant_IT_32);
+    initialize_clk_frequency();
+    mask_IRQ(0, false);
+};
 
 /*
  * Writes on the Upper right corner, the time since the system booted
  */
-void write_time(char *time_as_string, uint32_t string_size) {
-    place_cursor(0, SCREEN_WIDTH - string_size);
+static void display_time_on_screen(char *time_as_string, uint32_t string_size) {
+    update_cursor_on_screen(0, SCREEN_WIDTH - string_size);
     printf(time_as_string, "%s");
 }
 
@@ -120,20 +141,29 @@ void tic_PIT() {
     outb(CLK_IT_NUMBER, IT_CONTROLLER_COMMAND_PORT);
     clk_ticks++;
 
-    if (clk_ticks == CLK_FREQ_HZ/3) {
-        clk_ticks = 0;
-        seconds++;
-        if (seconds == 60) {
-            minutes++;
-            seconds = 0;
-        }
-        if (minutes == 60) {
-            hours++;
-            minutes = 0;
-        }
-        sprintf(time_display, "%02d:%02d:%02d", hours, minutes, seconds);
-        write_time(time_display, 8);
+    if (clk_ticks == CLK_FREQ_HZ) {
+        increment_timer_in_one_sec();
     }
+}
+
+/*
+ * Increment the timer in one second,
+ * and update it on the screen.
+ *
+ */
+static void increment_timer_in_one_sec() {
+    clk_ticks = 0;
+    seconds++;
+    if (seconds == 60) {
+        minutes++;
+        seconds = 0;
+    }
+    if (minutes == 60) {
+        hours++;
+        minutes = 0;
+    }
+    sprintf(time_display, "%02d:%02d:%02d", hours, minutes, seconds);
+    display_time_on_screen(time_display, 8);
 }
 
 /*
@@ -141,8 +171,9 @@ void tic_PIT() {
  *
  * It writes on the interruption case identified by its number, the corresponding interruption treatment function pointer
  * with a fixed configuration.
+ * Each entry corresponds to two words of 32 bits each.
  */
-void initialize_idt_entry(uint32_t it_number, void (*it_treatment_fn)(void)) {
+static void initialize_idt_entry(uint32_t it_number, void (*it_treatment_fn)(void)) {
     // it_number should be between 0 and 256. There are only 256 interruptions on x86
     assert(it_number >= 0);
     assert(it_number <= 255);
@@ -168,7 +199,7 @@ void initialize_idt_entry(uint32_t it_number, void (*it_treatment_fn)(void)) {
  *
  * For more info, see `PIT_IO_COMMAND_DATA` description
  */
-void initialize_clk_frequency() {
+static void initialize_clk_frequency() {
     outb(PIT_IO_COMMAND_DATA, PIT_IO_COMMAND_PORT);
     outb(PIT_RELOAD_VALUE & 0xFF, PIT_IO_CHANNEL_0);
     outb(((PIT_RELOAD_VALUE & 0xFF00) >> 8), PIT_IO_CHANNEL_0);
@@ -177,13 +208,13 @@ void initialize_clk_frequency() {
 }
 
 /*
- * Mask/Unmask the interruption number `num_IRQ`
+ * Mask/Unmask the interruption request number `num_IRQ`
  * on the Programmable interruption controller.
  *
  * A mask set to true, means the controller ignores the interruption.
  * Otherwise, it communicates the interruption to the processor.
  */
-void mask_IRQ(uint32_t num_IRQ, bool mask) {
+static void mask_IRQ(uint32_t num_IRQ, bool mask) {
     uint8_t irq_bitmap_mask = inb(IRQ_MASK_DATA_PORT);
     uint8_t mask_to_apply;
     if (mask) {
