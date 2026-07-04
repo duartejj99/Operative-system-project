@@ -6,7 +6,6 @@
 // on peut s'entrainer a utiliser GDB avec ce code de base
 // par exemple afficher les valeurs de x, n et res avec la commande display
 
-extern void traitant_IT_32();
 // une fonction bien connue
 uint32_t fact(uint32_t n)
 {
@@ -24,9 +23,8 @@ void kernel_start(void)
 {
     clean_screen();
     printf("Malika, I implemented printf ;) habibi");
-    initialize_idt_entry(32, traitant_IT_32);
-    mask_IRQ(0, false);
-
+    // Interruption initialization
+    init_pit_interruption_config();
 
     sti();
     // on ne doit jamais sortir de kernel_start
