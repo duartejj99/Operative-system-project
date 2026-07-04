@@ -23,8 +23,6 @@ uint32_t fact(uint32_t n)
 void kernel_start(void)
 {
     clean_screen();
-    place_cursor(24,0);
-    char_treatment('\n');
     printf("Malika, I implemented printf ;) habibi");
     initialize_idt_entry(32, traitant_IT_32);
     mask_IRQ(0, false);
