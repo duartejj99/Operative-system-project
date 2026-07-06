@@ -149,7 +149,6 @@ void tic_PIT() {
 /*
  * Increment the timer in one second,
  * and update it on the screen.
- *
  */
 static void increment_timer_in_one_sec() {
     clk_ticks = 0;
