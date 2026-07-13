@@ -56,3 +56,72 @@ If for some reason you need a constant that absolutely needs to be defined on th
 This guarantees that the constant is defined only one on your whole program and can be accessed multiple times.
 
 Source:https://stackoverflow.com/questions/17764661/multiple-definition-of-linker-error
+
+
+## Struct initialization and assignment
+
+**Context**
+
+When Initializing my process data struct, I have to **initialize** the value of that process **stack pointer register** `esp` to point into the top of its own **stack**. 
+And also that stack top should have the **return address** where the program should start (or resume), once a context switch has been done.
+
+At the end of the context switch, when the `ret` instruction is executed, the value pointed by `esp` is **pop** onto the **program counter** to indicate the next instruction to execute.
+
+
+**Bug Observation***
+
+
+A process struct had the following fields:
+
+Process
+|
+|--------> register_table[5] // register_table[1] corresponds to ESP value.
+|
+|
+|--------> call_stack[512] // call_stack[511] is the top of the stack
+
+
+At initialization:
+
+call_stack[PROCESS_STACK_SIZE - 1] should have the process_fn_address
+register_table[ESP] should be equal to & call_stack[PROCESS_STACK_SIZE -1].
+
+
+1. Process fn address was 0x110003.
+2. Successfully added onto the top of the stack. :white_check_mark:
+3. Top stack addr was 0x11353c :white_check_mark:
+4.  *(esp) should be equal to process_fn_addr1. It did :white_check_mark:
+5. esp should be equal then to the top stack addr (0x11353c) :x:
+
+
+**BUT I expected `esp` being 0x11353c but it was 0x11db1c**. I suspected something was wrong.
+
+
+**Explanation**
+
+Upon initialization, I pass a struct pointer, and the initialization function set its values.
+Once its finished, the values were correclty set and `esp` actually had the same value as the
+stack end.
+
+Surprisingly, that value was `0x1d320`. This observation was done on a debugging session, and
+inside the end of the initialization fn
+
+
+After asking chatgpt, I realized that I did a copy of the structure I initialized.
+I thought the **struct assignment** meant only a copy of a pointer, but it copies the whole
+struct!!!
+
+That means that when I check the struct copy `os_processes[1]`, its `register_table[ESP]` value points
+to the **stack of the ORIGINAL copy** (`process1`), and not its own stack.
+
+
+**Solution**
+
+Instead of creating a struct and passsing it to the initialization function.
+I passed the pointer to the corresponding case of os_processes[].
+
+
+
+
+
+
