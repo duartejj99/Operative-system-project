@@ -9,6 +9,14 @@ enum process_state {
   SLEEPING,
 };
 
+enum process_registers_index {
+    EBX = 0,
+    ESP = 1,
+    EBP = 2,
+    ESI = 3,
+    EDI = 4
+};
+
 struct Process {
   int pid;
   char name[20];

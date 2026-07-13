@@ -21,8 +21,12 @@ void initialize_process(struct Process  *p2, char * name,  void (*process_fn)())
     memset(p2->register_table, 0, NUMBER_OF_REGISTERS * 4);
     memset(p2->call_stack, 0, PROCESS_STACK_SIZE * 4);
     p2->call_stack[PROCESS_STACK_SIZE-1] = (uint32_t)process_fn;
-    p2->register_table[1] = (uint32_t) &p2->call_stack[PROCESS_STACK_SIZE-1];
+    p2->register_table[ESP] = (uint32_t) &p2->call_stack[PROCESS_STACK_SIZE-1];
 }
 
-    return p1;
+void idle_process_initialization(struct Process *p) {
+    strcpy(p->name, "idle");
+    p->pid = 0;
+    p->state = CHOSEN;
+
 }
