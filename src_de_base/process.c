@@ -5,7 +5,6 @@
 
 #define NUMBER_OF_REGISTERS 5
 int32_t pid = 0;
-struct Process os_processes[5];
 
 
 // TODO: Right now is created locally, after going out of the function, the stack of this function will collapse and
