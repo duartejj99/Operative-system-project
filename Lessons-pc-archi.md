@@ -26,3 +26,29 @@ I was able to learn a little more about assembly, and its call and ret instructi
     callee
 7.  I understood how after that `esp` was pointing at the return address
 8.  I understood when we arrive to `ret`, this return address is pop into the program counter.
+9.  I understood how the stack is cleaned out of the parameters, as a caller responsability
+    Ex: If I pushed two 32bits parameters, then after `call fn_name`, as a caller I will put `ADD ESP, 8`
+
+    
+For more info: https://wiki.osdev.org/Stack [Stack architecture on x86]
+For more info: https://youtu.be/u_-oQx_4jvo?si=ZkfGff86CFe-TsbX [How Assembly function works]
+
+
+## Next step
+
+I understood how the context switch works explicitaly being called by one of the processes.
+
+But what happen when an interruption is called?
+
+What happen to the stack pointer?
+What happen to the registers?
+
+1. I see that eax, edx, ecx are saved and restored before and after the interruption
+2. Entering the interruption we saved eflags and also the RETURN ADDR (#1) to resume the interrupted process.
+3. WE CALL THE INTERRUPTION (CLOCK)
+4. Here again a return address should be pushed into the stack.
+5. The interruption handle happens and at the end we should CTX_SW.
+6. This means we are going to save the CURRENT STACK POINTER (#sp1) that is in the end of the interruption, before it arrives to IRET
+7. Take the new chosen PROCESS STACK POINTER (#sp2) and this I imagine it was also interrupted at some point
+8. Which means, he will get out of the INTERRUPTION HANDLER INTO THE TRAITANT.S, but with a different RETURN ADDRESS(#2) and then 
+9. Resumes the execution but to a different process.

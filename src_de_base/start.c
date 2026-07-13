@@ -41,7 +41,6 @@ void kernel_start(void)
     // Interruption initialization
     init_pit_interruption_config();
 
-    // struct Process process1, idle_proc;
     initialize_process(&os_processes[1], "proc_1", proc1);
     idle_process_initialization(&os_processes[0]);
 
