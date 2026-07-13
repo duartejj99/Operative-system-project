@@ -8,30 +8,23 @@
 extern void ctx_sw(int32_t * old_context, int32_t * new_context);
 extern struct Process os_processes[];
 
-// on peut s'entrainer a utiliser GDB avec ce code de base
-// par exemple afficher les valeurs de x, n et res avec la commande display
-
-// une fonction bien connue
-uint32_t fact(uint32_t n)
-{
-    uint32_t res;
-    if (n <= 1) {
-        res = 1;
-    } else {
-        res = fact(n - 1) * n;
-    }
-    return res;
-}
-
 void idle() {
-    printf("[IDLE] I want to give the hand to process 1\n");
-    ctx_sw((int32_t *)&os_processes[0].register_table,(int32_t *)&os_processes[1].register_table);
+    for (int i = 0; i < 3; i++) {
+        printf("[IDLE] I want to give the hand to process 1\n");
+        ctx_sw((int32_t *)&os_processes[0].register_table,(int32_t *)&os_processes[1].register_table);
+        printf("[IDLE] Process 1 gave me the hand back\n");
+    }
+
+    printf("[IDLE] I block the system now\n");
+    hlt();
 }
 
 void proc1() {
-    printf("[PROC_1] I RECEIVED THE PROCESSOR\n");
-    printf("[PROC_1] I dont want it anyways\n");
-    hlt();
+    for (;;) {
+        printf("[PROC_1] I RECEIVED THE PROCESSOR from IDLE\n");
+        printf("[PROC_1] I dont want it anyways\n");
+        ctx_sw((int32_t *)&os_processes[1].register_table,(int32_t *)&os_processes[0].register_table);
+    }
 }
 
 void kernel_start(void)
