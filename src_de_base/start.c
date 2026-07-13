@@ -9,7 +9,8 @@ extern struct Process os_processes[];
 
 void idle() {
     for (;;) {
-        printf("[IDLE] I have the hand\n");
+        printf("[%s\t] pid = %i\n", name(), pid());
+        // printf("[IDLE] I have the hand\n");
         schedule();
     }
 
@@ -17,7 +18,8 @@ void idle() {
 
 void proc1() {
     for (;;) {
-        printf("[PROC_1] I Have the hand\n");
+        printf("[%s\t] pid = %i\n", name(), pid());
+        // printf("[PROC_1] I Have the hand\n");
         schedule();
     }
 }
@@ -30,7 +32,7 @@ void kernel_start(void)
     init_pit_interruption_config();
 
     setup_scheduler();
-    new_process(&os_processes[1], "proc_1", proc1);
+    new_process(&os_processes[1], "PROC 1", proc1);
 
     idle();
     // sti();

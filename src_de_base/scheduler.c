@@ -63,7 +63,21 @@ void new_process(struct Process  *process, char * name,  void (*process_fn)()) {
  * Setup idle process data
  */
 static void idle_process_initialization(struct Process *p) {
-    strcpy(p->name, "idle");
+    strcpy(p->name, "IDLE");
     p->pid = 0;
     p->state = CHOSEN;
+}
+
+/*
+ * Returns the active process name
+ */
+char *name() {
+    return active_process->name;
+}
+
+/*
+ * Returns the active process pid
+ */
+int32_t pid() {
+    return active_process->pid;
 }
