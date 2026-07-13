@@ -34,7 +34,3 @@ struct Process {
   uint32_t register_table[NUMBER_OF_REGISTERS];
   int32_t call_stack[PROCESS_STACK_SIZE];
 };
-
-
-
-void initialize_process(struct Process *p2, char *name, void (*process_fn)());
