@@ -3,7 +3,7 @@
 #include "debug.h"
 #include "inttypes.h"
 
-#define MAX_NUM_OF_PROCESSES 5
+#define MAX_NUM_OF_PROCESSES 4
 
 extern void ctx_sw(int32_t * old_context, int32_t * new_context);
 
@@ -39,24 +39,32 @@ void schedule() {
 }
 
 /*
- * Initialize a new process.
+ * Creates a new process.
  * Leaving it ready to been executed
  * when chosen by the scheduler.
  *
+ * Returns the process identifier (pid)
  * For more details: see `Lessons-pc-archi.md`
  */
-void new_process(struct Process  *process, char * name,  void (*process_fn)()) {
+int32_t new_process(char * name,  void (*process_fn)()) {
     assert(name != 0);
-    assert(number_of_processes + 1 < MAX_NUM_OF_PROCESSES);
+    assert(process_fn != 0);
+    if (number_of_processes + 1 >= MAX_NUM_OF_PROCESSES)
+        return -1;
     number_of_processes++;
 
+    struct Process *process = &os_processes[number_of_processes];
+    *process =(struct Process){
+        .pid = number_of_processes,
+        .state = READY,
+        .register_table = {0,0,0,0,0},
+        .call_stack = {0},
+    };
     strcpy(process->name, name);
-    process->pid = number_of_processes;
-    process->state = READY;
-    memset(process->register_table, 0, NUMBER_OF_REGISTERS * 4);
-    memset(process->call_stack, 0, PROCESS_STACK_SIZE * 4);
     process->call_stack[PROCESS_STACK_SIZE-1] = (uint32_t)process_fn;
     process->register_table[ESP] = (uint32_t) &process->call_stack[PROCESS_STACK_SIZE-1];
+
+    return process->pid;
 }
 
 /*

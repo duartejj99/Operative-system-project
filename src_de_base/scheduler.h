@@ -1,7 +1,8 @@
 #include "process.h"
+#include "inttypes.h"
 
 void setup_scheduler();
-void new_process(struct Process  *process, char * name,  void (*process_fn)());
+int32_t new_process(char * name,  void (*process_fn)());
 void schedule();
 
 

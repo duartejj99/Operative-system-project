@@ -1,4 +1,5 @@
 #include "cpu.h"
+#include "debug.h"
 #include "inttypes.h"
 #include "screen.h"
 #include "stdio.h"
@@ -34,8 +35,12 @@ void kernel_start(void)
     setup_scheduler();
     new_process(&os_processes[1], "PROC 1", proc1);
 
+    int32_t pid = new_process("PROC 1", proc1);
+    if (pid == -1) {
+        panic("Process table is full!");
+    }
     idle();
-    // sti();
+    // sti(); // unmask interruptions
     // on ne doit jamais sortir de kernel_start
     while (1) {
         // cette fonction arrete le processeur
