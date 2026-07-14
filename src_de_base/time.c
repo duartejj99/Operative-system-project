@@ -6,7 +6,7 @@
 #include "stdbool.h"
 #include "debug.h"
 #include "time.h"
-
+#include "scheduler.h"
 // PIT configuration:
 /*
  * PIT default clock signal frequency on HZ
@@ -146,6 +146,7 @@ void tic_PIT() {
     if (clk_ticks == CLK_FREQ_HZ) {
         increment_timer_in_one_sec();
     }
+    schedule();
 }
 
 /*

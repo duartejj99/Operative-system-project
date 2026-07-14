@@ -11,8 +11,9 @@ extern struct Process os_processes[];
 void idle() {
     for (;;) {
         printf("[%s\t] pid = %i\n", name(), pid());
-        // printf("[IDLE] I have the hand\n");
-        schedule();
+        sti();
+        hlt();
+        cli();
     }
 
 }
@@ -20,8 +21,28 @@ void idle() {
 void proc1() {
     for (;;) {
         printf("[%s\t] pid = %i\n", name(), pid());
-        // printf("[PROC_1] I Have the hand\n");
-        schedule();
+        sti();
+        hlt();
+        cli();
+    }
+}
+
+
+void proc2() {
+    for (;;) {
+        printf("[%s\t] pid = %i\n", name(), pid());
+        sti();
+        hlt();
+        cli();
+    }
+}
+
+void proc3() {
+    for (;;) {
+        printf("[%s\t] pid = %i\n", name(), pid());
+        sti();
+        hlt();
+        cli();
     }
 }
 
@@ -31,9 +52,7 @@ void kernel_start(void)
     printf("Malika, I implemented printf ;) habibi\n");
     // Interruption initialization
     init_pit_interruption_config();
-
     setup_scheduler();
-    new_process(&os_processes[1], "PROC 1", proc1);
 
     int32_t pid = new_process("PROC 1", proc1);
     if (pid == -1) {
