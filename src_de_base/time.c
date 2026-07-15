@@ -99,6 +99,8 @@ static char time_display[15];
 static uint8_t seconds = 0;
 static uint8_t minutes = 0;
 static uint8_t hours = 0;
+/* Time since system boot in seconds */
+uint32_t uptime_in_seconds = 0;
 
 static void initialize_idt_entry(uint32_t it_number, void (*it_treatment_fn)(void));
 static void initialize_clk_frequency();
@@ -158,15 +160,11 @@ void tic_PIT() {
  */
 static void increment_timer_in_one_sec() {
     clk_ticks = 0;
-    seconds++;
-    if (seconds == 60) {
-        minutes++;
-        seconds = 0;
-    }
-    if (minutes == 60) {
-        hours++;
-        minutes = 0;
-    }
+    uptime_in_seconds++;
+    // 3600s in an hour= 60 min * 60 s
+    hours = uptime_in_seconds / 3600;
+    minutes = (uptime_in_seconds % 3600) / 60;
+    seconds = (uptime_in_seconds % 3600) % 60;
     sprintf(time_display, "%02d:%02d:%02d", hours, minutes, seconds);
     display_time_on_screen(time_display, 8);
 }

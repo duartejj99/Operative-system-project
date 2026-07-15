@@ -8,7 +8,6 @@
 
 void idle() {
     for (;;) {
-        printf("[%s\t] pid = %i\n", name(), pid());
         sti();
         hlt();
         cli();
@@ -19,9 +18,7 @@ void idle() {
 void proc1() {
     for (;;) {
         printf("[%s\t] pid = %i\n", name(), pid());
-        sti();
-        hlt();
-        cli();
+        sleep(2);
     }
 }
 
@@ -29,19 +26,14 @@ void proc1() {
 void proc2() {
     for (;;) {
         printf("[%s\t] pid = %i\n", name(), pid());
-        sti();
-        hlt();
-        cli();
+        sleep(3);
     }
 }
 
 void proc3() {
     for (;;) {
         printf("[%s\t] pid = %i\n", name(), pid());
-        sti();
-        hlt();
-        cli();
-    }
+        sleep(5);    }
 }
 
 void kernel_start(void)
@@ -53,6 +45,15 @@ void kernel_start(void)
     setup_scheduler();
 
     int32_t pid = new_process("PROC 1", proc1);
+    if (pid == -1) {
+        panic("Process table is full!");
+    }
+
+    pid = new_process("PROC 2", proc2);
+    if (pid == -1) {
+        panic("Process table is full!");
+    }
+    pid = new_process("PROC 3", proc3);
     if (pid == -1) {
         panic("Process table is full!");
     }

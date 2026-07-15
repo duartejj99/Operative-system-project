@@ -33,4 +33,5 @@ struct Process {
   // ebx, esp, ebp, esi, edi
   uint32_t register_table[NUMBER_OF_REGISTERS];
   int32_t call_stack[PROCESS_STACK_SIZE];
+  uint32_t waking_time;
 };
