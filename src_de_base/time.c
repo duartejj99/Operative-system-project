@@ -116,6 +116,8 @@ static void increment_timer_in_one_sec();
  */
 void init_pit_interruption_config() {
     // Interruption initialization
+    // Here we initialize the IDT entry telling the Interruption controler
+    // 1. When we arrive to our interruption, we cannot be interrupted.
     initialize_idt_entry(32, traitant_IT_32);
     initialize_clk_frequency();
     mask_IRQ(0, false);
@@ -149,7 +151,6 @@ void tic_PIT() {
 /*
  * Increment the timer in one second,
  * and update it on the screen.
- *
  */
 static void increment_timer_in_one_sec() {
     clk_ticks = 0;
@@ -167,7 +168,8 @@ static void increment_timer_in_one_sec() {
 }
 
 /*
- * Initializes the Interruption description table (IDT) entry.
+ * Initializes the Interruption description table (IDT) entry, telling the processor
+ * which function to call for the interruption # `it_number`.
  *
  * It writes on the interruption case identified by its number, the corresponding interruption treatment function pointer
  * with a fixed configuration.
