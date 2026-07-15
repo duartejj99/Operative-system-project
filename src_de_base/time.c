@@ -127,8 +127,11 @@ void init_pit_interruption_config() {
  * Writes on the Upper right corner, the time since the system booted
  */
 static void display_time_on_screen(char *time_as_string, uint32_t string_size) {
+    uint32_t line = cursor_line();
+    uint32_t col = cursor_column();
     update_cursor_on_screen(0, SCREEN_WIDTH - string_size);
     printf(time_as_string, "%s");
+    update_cursor_on_screen(line, col);
 }
 
 /*

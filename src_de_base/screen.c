@@ -40,6 +40,14 @@ void console_putbytes(const char *s, int len) {
         char_treatment(s[i]);
 }
 
+uint32_t cursor_line() {
+    return current_cursor_line;
+}
+
+uint32_t cursor_column() {
+    return current_cursor_col;
+}
+
 void update_cursor_on_screen(uint32_t line, uint32_t col) {
     current_cursor_line = line;
     current_cursor_col = col;

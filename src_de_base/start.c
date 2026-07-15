@@ -6,8 +6,6 @@
 #include "time.h"
 #include "scheduler.h"
 
-extern struct Process os_processes[];
-
 void idle() {
     for (;;) {
         printf("[%s\t] pid = %i\n", name(), pid());
