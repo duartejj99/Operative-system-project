@@ -13,9 +13,10 @@
 #define PROCESS_NAME_FORMAT "[process #pid] State: state"
 
 enum process_state {
-  READY,
-  CHOSEN,
-  SLEEPING,
+    UNINITIALIZED,
+    READY,
+    CHOSEN,
+    SLEEPING,
 };
 
 enum process_registers_index {
