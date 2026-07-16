@@ -13,10 +13,6 @@ struct Process * active_process = &os_processes[0];
 static void idle_process_initialization(struct Process * p);
 static void wake_up_sleeping_processes();
 
-void setup_scheduler() {
-    idle_process_initialization(&os_processes[0]);
-}
-
 void schedule() {
     int32_t chosen_process_pid = 0;
     struct Process * chosen_process;
@@ -38,7 +34,7 @@ void schedule() {
     chosen_process = &os_processes[chosen_process_pid];
 
     // Update processes states
-    if (active_process->state != SLEEPING)
+    if (active_process->state != SLEEPING && active_process->state != ZOMBIE)
         active_process->state = READY;  // active process
     chosen_process->state = CHOSEN; // next active process
     active_process = &os_processes[chosen_process_pid]; // update active_process pointer
@@ -74,6 +70,15 @@ int32_t new_process(char * name,  void (*process_fn)()) {
     process->register_table[ESP] = (uint32_t) &process->call_stack[PROCESS_STACK_SIZE-1];
 
     return process->pid;
+}
+
+void end_process() {
+    active_process->state = ZOMBIE;
+    schedule();
+}
+
+void setup_scheduler() {
+    idle_process_initialization(&os_processes[0]);
 }
 
 /*

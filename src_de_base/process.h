@@ -17,6 +17,7 @@ enum process_state {
     READY,
     CHOSEN,
     SLEEPING,
+    ZOMBIE
 };
 
 enum process_registers_index {
