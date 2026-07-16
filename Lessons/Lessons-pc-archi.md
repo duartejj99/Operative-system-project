@@ -30,8 +30,8 @@ I was able to learn a little more about assembly, and its call and ret instructi
     Ex: If I pushed two 32bits parameters, then after `call fn_name`, as a caller I will put `ADD ESP, 8`
 
     
-For more info: https://wiki.osdev.org/Stack [Stack architecture on x86]
-For more info: https://youtu.be/u_-oQx_4jvo?si=ZkfGff86CFe-TsbX [How Assembly function works]
+For more info: [Stack architecture on x86](https://wiki.osdev.org/Stack)
+For more info: [How Assembly function works](https://youtu.be/u_-oQx_4jvo?si=ZkfGff86CFe-TsbX)
 
 
 ## Next step

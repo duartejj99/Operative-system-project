@@ -17,7 +17,8 @@ void idle() {
 
 void proc1() {
     for (;;) {
-        printf("[%s\t] pid = %i\n", name(), pid());
+        printf("[time = %u] process: %s pid = %i\n", uptime(),
+        name(), pid());
         sleep(2);
     }
 }
@@ -25,15 +26,18 @@ void proc1() {
 
 void proc2() {
     for (;;) {
-        printf("[%s\t] pid = %i\n", name(), pid());
+        printf("[time = %u] process: %s pid = %i\n", uptime(),
+        name(), pid());
         sleep(3);
     }
 }
 
 void proc3() {
     for (;;) {
-        printf("[%s\t] pid = %i\n", name(), pid());
-        sleep(5);    }
+        printf("[time = %u] process: %s pid = %i\n", uptime(),
+        name(), pid());
+        sleep(5);
+    }
 }
 
 void kernel_start(void)

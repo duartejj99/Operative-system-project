@@ -231,3 +231,12 @@ static void mask_IRQ(uint32_t num_IRQ, bool mask) {
 
     outb(irq_bitmap_mask, IRQ_MASK_DATA_PORT);
 }
+
+/* Return the time that has passed since
+ * the system booting.
+ *
+ * The time is expressed in seconds
+ */
+uint32_t uptime() {
+    return uptime_in_seconds;
+}

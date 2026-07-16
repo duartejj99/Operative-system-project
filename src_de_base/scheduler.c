@@ -86,7 +86,7 @@ static void idle_process_initialization(struct Process *p) {
 }
 
 void sleep(uint32_t number_of_seconds) {
-    active_process->waking_time = uptime_in_seconds + number_of_seconds;
+    active_process->waking_time = uptime() + number_of_seconds;
     active_process->state = SLEEPING;
     schedule();
 }
@@ -96,7 +96,7 @@ void wake_up_sleeping_processes(){
         if (os_processes[pid].state != SLEEPING)
             continue;
 
-        if (os_processes[pid].waking_time <= uptime_in_seconds) {
+        if (os_processes[pid].waking_time <= uptime()) {
             os_processes[pid].state = READY;
         }
     }
