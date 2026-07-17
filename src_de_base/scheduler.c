@@ -5,6 +5,7 @@
 #include "inttypes.h"
 #include "time.h"
 #include "stdio.h"
+#include "cpu.h"
 #define MAX_NUM_OF_PROCESSES 5
 
 extern void ctx_sw(int32_t * old_context, int32_t * new_context);
@@ -71,17 +72,21 @@ int32_t new_process(char * name,  void (*process_fn)()) {
     }
     if (free_place  >= MAX_NUM_OF_PROCESSES)
         return -1;
-    char name_for_real[20] = "";
-    sprintf(name_for_real, "PROC %d", number_of_processes_created);
+    // HERE IS THE BUG;
+    // It overrides the Return address value left on the stack for the proc 3.
+    // It is override for this char name_for_real[20] declaration!
+    // char name_for_real[15] = "P";
+    // sprintf(name_for_real, "PROC %d", number_of_processes_created);
     struct Process *process = &os_processes[free_place];
     *process =(struct Process){
-        .pid = number_of_processes_created,
+        .pid = free_place,
         .state = READY,
         .register_table = {0,0,0,0,0},
         .call_stack = {0},
         .waking_time = 0,
     };
-    strcpy(process->name, name_for_real);
+    strcpy(process->name, name);
+    // strcpy(process->name, name_for_real);
     process->call_stack[PROCESS_STACK_SIZE-2] = (uint32_t)process_fn;
     process->call_stack[PROCESS_STACK_SIZE-1] = (uint32_t)end_process;
     process->register_table[ESP] = (uint32_t) &process->call_stack[PROCESS_STACK_SIZE-2];
@@ -102,7 +107,7 @@ void setup_scheduler() {
  * Setup idle process data
  */
 static void idle_process_initialization(struct Process *p) {
-    strcpy(p->name, "IDLE");
+    strcpy(p->name, "IDLE 0");
     p->pid = 0;
     p->state = CHOSEN;
 }
@@ -110,6 +115,8 @@ static void idle_process_initialization(struct Process *p) {
 void sleep(uint32_t number_of_seconds) {
     active_process->waking_time = uptime() + number_of_seconds;
     active_process->state = SLEEPING;
+    // sti();
+    // hlt();
     schedule();
 }
 
@@ -133,7 +140,7 @@ void display_processes_state(){
     for (int i = 0; i < MAX_NUM_OF_PROCESSES; i++) {
         name = os_processes[i].name;
         state = process_state_name[os_processes[i].state];
-        printf("[%s\t] pid = %i\tstate: %s\t\n", name, i, state);
+        printf("[%s\t] pid = %i\tstate: %s\t\t\n", name, i, state);
     }
     update_cursor_on_screen(line, column);
 }
