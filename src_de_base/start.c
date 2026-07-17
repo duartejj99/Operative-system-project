@@ -21,8 +21,6 @@ void proc1() {
         name(), pid());
         sleep(2);
     }
-
-    end_process();
 }
 
 
@@ -32,8 +30,6 @@ void proc2() {
         name(), pid());
         sleep(3);
     }
-
-    end_process();
 }
 
 void proc3() {
@@ -42,8 +38,6 @@ void proc3() {
         name(), pid());
         sleep(5);
     }
-
-    end_process();
 }
 
 void kernel_start(void)

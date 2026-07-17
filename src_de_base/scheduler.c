@@ -14,6 +14,7 @@ struct Process * active_process = &os_processes[0];
 static void idle_process_initialization(struct Process * p);
 static void wake_up_sleeping_processes();
 static void display_processes_state();
+static void end_process();
 
 void schedule() {
     int32_t chosen_process_pid = 0;
@@ -68,8 +69,9 @@ int32_t new_process(char * name,  void (*process_fn)()) {
         .waking_time = 0,
     };
     strcpy(process->name, name);
-    process->call_stack[PROCESS_STACK_SIZE-1] = (uint32_t)process_fn;
-    process->register_table[ESP] = (uint32_t) &process->call_stack[PROCESS_STACK_SIZE-1];
+    process->call_stack[PROCESS_STACK_SIZE-2] = (uint32_t)process_fn;
+    process->call_stack[PROCESS_STACK_SIZE-1] = (uint32_t)end_process;
+    process->register_table[ESP] = (uint32_t) &process->call_stack[PROCESS_STACK_SIZE-2];
 
     return process->pid;
 }
