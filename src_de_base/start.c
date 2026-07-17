@@ -49,7 +49,7 @@ void proc3() {
 void kernel_start(void)
 {
     clean_screen();
-    printf("Malika, I implemented printf ;) habibi\n");
+    printf("\n\n\n\n\n\nMalika, I implemented printf ;) habibi\n");
     // Interruption initialization
     init_pit_interruption_config();
     setup_scheduler();

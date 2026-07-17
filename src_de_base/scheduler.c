@@ -1,4 +1,5 @@
 #include "process.h"
+#include "screen.h"
 #include "string.h"
 #include "debug.h"
 #include "inttypes.h"
@@ -12,6 +13,7 @@ int32_t number_of_processes = 0;
 struct Process * active_process = &os_processes[0];
 static void idle_process_initialization(struct Process * p);
 static void wake_up_sleeping_processes();
+static void display_processes_state();
 
 void schedule() {
     int32_t chosen_process_pid = 0;
@@ -38,7 +40,7 @@ void schedule() {
         active_process->state = READY;  // active process
     chosen_process->state = CHOSEN; // next active process
     active_process = &os_processes[chosen_process_pid]; // update active_process pointer
-
+    display_processes_state();
     ctx_sw((int32_t *)current_process->register_table, (int32_t *)chosen_process->register_table);
 }
 
@@ -106,6 +108,21 @@ void wake_up_sleeping_processes(){
         }
     }
 }
+
+void display_processes_state(){
+    char * name;
+    const char * state;
+    uint32_t line = cursor_line();
+    uint32_t column = cursor_column();
+    update_cursor_on_screen(0, 0);
+    for (int i = 0; i < MAX_NUM_OF_PROCESSES; i++) {
+        name = os_processes[i].name;
+        state = process_state_name[os_processes[i].state];
+        printf("[%s\t] pid = %i\tstate: %s\t\n", name, i, state);
+    }
+    update_cursor_on_screen(line, column);
+}
+
 /*
  * Returns the active process name
  */

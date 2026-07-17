@@ -20,6 +20,7 @@ enum process_state {
     ZOMBIE
 };
 
+extern const char* process_state_name[];
 enum process_registers_index {
     EBX = 0,
     ESP = 1,
