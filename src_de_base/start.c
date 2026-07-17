@@ -21,6 +21,11 @@ void proc1() {
         name(), pid());
         sleep(2);
     }
+
+    int32_t pid = new_process("PROC 11", proc1);
+    if (pid == -1) {
+        panic("Process table is full!");
+    }
 }
 
 
@@ -28,7 +33,11 @@ void proc2() {
     for (int i = 0; i < 2; i++) {
         printf("[time = %u] process: %s pid = %i\n", uptime(),
         name(), pid());
-        sleep(3);
+        sleep(10);
+    }
+    int32_t pid = new_process("PROC 12", proc1);
+    if (pid == -1) {
+        panic("Process table is full!");
     }
 }
 
@@ -37,6 +46,10 @@ void proc3() {
         printf("[time = %u] process: %s pid = %i\n", uptime(),
         name(), pid());
         sleep(5);
+    }
+    int32_t pid = new_process("PROC 13", proc1);
+    if (pid == -1) {
+        panic("Process table is full!");
     }
 }
 

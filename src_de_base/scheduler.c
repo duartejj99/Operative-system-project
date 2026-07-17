@@ -4,12 +4,13 @@
 #include "debug.h"
 #include "inttypes.h"
 #include "time.h"
-#define MAX_NUM_OF_PROCESSES 4
+#include "stdio.h"
+#define MAX_NUM_OF_PROCESSES 5
 
 extern void ctx_sw(int32_t * old_context, int32_t * new_context);
 
 struct Process os_processes[MAX_NUM_OF_PROCESSES];
-int32_t number_of_processes = 0;
+int32_t number_of_processes_created = 0;
 struct Process * active_process = &os_processes[0];
 static void idle_process_initialization(struct Process * p);
 static void wake_up_sleeping_processes();
@@ -24,6 +25,9 @@ void schedule() {
     wake_up_sleeping_processes();
 
     // choose next process
+    // TODO: Change policy, we began always to search in order of the fixed array
+    // We could begin to search from the pid immediatly after the active process id
+    // and finish searching on the pid before our active process id.
     while(chosen_process_pid < MAX_NUM_OF_PROCESSES) {
         if (os_processes[chosen_process_pid].state == READY)
             break;
@@ -54,21 +58,30 @@ void schedule() {
  * For more details: see `Lessons-pc-archi.md`
  */
 int32_t new_process(char * name,  void (*process_fn)()) {
+    // TODO: choose free slot policy is always pointing to the first cases first
+    // Is it a desirable behavior?
+    number_of_processes_created++;
     assert(name != 0);
     assert(process_fn != 0);
-    if (number_of_processes + 1 >= MAX_NUM_OF_PROCESSES)
+    int free_place;
+    for (free_place = 1; free_place < MAX_NUM_OF_PROCESSES; free_place++){
+        enum process_state process_state = os_processes[free_place].state;
+        if (process_state == UNINITIALIZED || process_state == ZOMBIE)
+            break;
+    }
+    if (free_place  >= MAX_NUM_OF_PROCESSES)
         return -1;
-    number_of_processes++;
-
-    struct Process *process = &os_processes[number_of_processes];
+    char name_for_real[20] = "";
+    sprintf(name_for_real, "PROC %d", number_of_processes_created);
+    struct Process *process = &os_processes[free_place];
     *process =(struct Process){
-        .pid = number_of_processes,
+        .pid = number_of_processes_created,
         .state = READY,
         .register_table = {0,0,0,0,0},
         .call_stack = {0},
         .waking_time = 0,
     };
-    strcpy(process->name, name);
+    strcpy(process->name, name_for_real);
     process->call_stack[PROCESS_STACK_SIZE-2] = (uint32_t)process_fn;
     process->call_stack[PROCESS_STACK_SIZE-1] = (uint32_t)end_process;
     process->register_table[ESP] = (uint32_t) &process->call_stack[PROCESS_STACK_SIZE-2];
