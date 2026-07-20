@@ -65,6 +65,9 @@ int32_t new_process(char * name,  void (*process_fn)()) {
     // Is it a desirable behavior?
     number_of_processes_created++;
 
+    // Verify that the esp is not accessing addresses outside its dedicated stack
+    // Verify at the beginning and at the end.
+
     assert(name != 0);
     assert(process_fn != 0);
     for (free_place = 1; free_place < MAX_NUM_OF_PROCESSES; free_place++){
@@ -74,24 +77,8 @@ int32_t new_process(char * name,  void (*process_fn)()) {
     }
     if (free_place  >= MAX_NUM_OF_PROCESSES)
         return -1;
-    // HERE IS THE BUG;
-    // It overrides the Return address value left on the stack for the proc 3.
-    // It is override for this char name_for_real[20] declaration!
-    // char name_for_real[21] = "P";
-    // sprintf corrupts my stack......
-    // snprintf(name_for_real, 21, "PROC %d", 0xDEADBEEF);
-    // sprintf(process->name, "PROC %d", 0xDEADBEEF);
+
     struct Process *process = &os_processes[free_place];
-    // *process =(struct Process){
-    //     .pid = free_place,
-    //     .name = {0},
-    //     .state = READY,
-    //     .register_table = {0,0,0,0,0},
-    //     .call_stack = {0},
-    //     .waking_time = 0,
-    // };
-    // strcpy(process->name, name);
-    // strcpy(process->name, name_for_real);
     process->pid = free_place;
     sprintf(process->name, "PROC %d", free_place);
     process->state = READY;
@@ -127,9 +114,9 @@ static void idle_process_initialization(struct Process *p) {
 void sleep(uint32_t number_of_seconds) {
     active_process->waking_time = uptime() + number_of_seconds;
     active_process->state = SLEEPING;
-    // sti();
-    // hlt();
-    schedule();
+    sti();
+    hlt();
+    // schedule();
 }
 
 void wake_up_sleeping_processes(){
