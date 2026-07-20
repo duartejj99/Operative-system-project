@@ -114,9 +114,7 @@ static void idle_process_initialization(struct Process *p) {
 void sleep(uint32_t number_of_seconds) {
     active_process->waking_time = uptime() + number_of_seconds;
     active_process->state = SLEEPING;
-    sti();
-    hlt();
-    // schedule();
+    schedule();
 }
 
 void wake_up_sleeping_processes(){
