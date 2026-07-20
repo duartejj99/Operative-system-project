@@ -21,7 +21,7 @@ I was able to learn a little more about assembly, and its call and ret instructi
 4.  I understood how `ebp` is moved now into the `esp` position to create a new stack frame
 5.  I understood that the esp can grow and shrink on demand while allocating space for the local variables.
 6.  I understood how at the end of a fn, `ebp` and `esp` could be pointing at the same @,
-    in this case, the old `ebp`.
+    in this case, the old `ebp`.(NOT NECESSARELY)
 6.  I understood how at the end the old `ebp` (the one saved on the stack on step 3) is restored on the
     callee
 7.  I understood how after that `esp` was pointing at the return address
@@ -30,8 +30,8 @@ I was able to learn a little more about assembly, and its call and ret instructi
     Ex: If I pushed two 32bits parameters, then after `call fn_name`, as a caller I will put `ADD ESP, 8`
 
     
-For more info: https://wiki.osdev.org/Stack [Stack architecture on x86]
-For more info: https://youtu.be/u_-oQx_4jvo?si=ZkfGff86CFe-TsbX [How Assembly function works]
+For more info: [Stack architecture on x86](https://wiki.osdev.org/Stack)
+For more info: [How Assembly function works](https://youtu.be/u_-oQx_4jvo?si=ZkfGff86CFe-TsbX)
 
 
 ## Next step

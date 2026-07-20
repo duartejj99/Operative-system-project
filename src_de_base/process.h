@@ -1,14 +1,26 @@
 #include "inttypes.h"
 
+
 #define PROCESS_STACK_SIZE 512
+
+/*
+ * The number of registers to save and restore on a context switch.
+ *
+ * They are the %EBX, %ESP, %EBP, %ESI and %EDI non-scratch registers,
+ * on x86 architecture.
+ */
+#define NUMBER_OF_REGISTERS 5
 #define PROCESS_NAME_FORMAT "[process #pid] State: state"
 
 enum process_state {
-  READY,
-  CHOSEN,
-  SLEEPING,
+    UNINITIALIZED,
+    READY,
+    CHOSEN,
+    SLEEPING,
+    ZOMBIE
 };
 
+extern const char* process_state_name[];
 enum process_registers_index {
     EBX = 0,
     ESP = 1,
@@ -22,11 +34,7 @@ struct Process {
   char name[20];
   enum process_state state;
   // ebx, esp, ebp, esi, edi
-  uint32_t register_table[5];
+  uint32_t register_table[NUMBER_OF_REGISTERS];
   int32_t call_stack[PROCESS_STACK_SIZE];
+  uint32_t waking_time;
 };
-
-
-
-void initialize_process(struct Process *p2, char *name, void (*process_fn)());
-void idle_process_initialization(struct Process *p);

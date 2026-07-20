@@ -6,7 +6,7 @@
 #include "stdbool.h"
 #include "debug.h"
 #include "time.h"
-
+#include "scheduler.h"
 // PIT configuration:
 /*
  * PIT default clock signal frequency on HZ
@@ -99,6 +99,8 @@ static char time_display[15];
 static uint8_t seconds = 0;
 static uint8_t minutes = 0;
 static uint8_t hours = 0;
+/* Time since system boot in seconds */
+uint32_t uptime_in_seconds = 0;
 
 static void initialize_idt_entry(uint32_t it_number, void (*it_treatment_fn)(void));
 static void initialize_clk_frequency();
@@ -127,8 +129,11 @@ void init_pit_interruption_config() {
  * Writes on the Upper right corner, the time since the system booted
  */
 static void display_time_on_screen(char *time_as_string, uint32_t string_size) {
+    uint32_t line = cursor_line();
+    uint32_t col = cursor_column();
     update_cursor_on_screen(0, SCREEN_WIDTH - string_size);
     printf(time_as_string, "%s");
+    update_cursor_on_screen(line, col);
 }
 
 /*
@@ -146,6 +151,7 @@ void tic_PIT() {
     if (clk_ticks == CLK_FREQ_HZ) {
         increment_timer_in_one_sec();
     }
+    schedule();
 }
 
 /*
@@ -154,15 +160,11 @@ void tic_PIT() {
  */
 static void increment_timer_in_one_sec() {
     clk_ticks = 0;
-    seconds++;
-    if (seconds == 60) {
-        minutes++;
-        seconds = 0;
-    }
-    if (minutes == 60) {
-        hours++;
-        minutes = 0;
-    }
+    uptime_in_seconds++;
+    // 3600s in an hour= 60 min * 60 s
+    hours = uptime_in_seconds / 3600;
+    minutes = (uptime_in_seconds % 3600) / 60;
+    seconds = (uptime_in_seconds % 3600) % 60;
     sprintf(time_display, "%02d:%02d:%02d", hours, minutes, seconds);
     display_time_on_screen(time_display, 8);
 }
@@ -228,4 +230,13 @@ static void mask_IRQ(uint32_t num_IRQ, bool mask) {
     }
 
     outb(irq_bitmap_mask, IRQ_MASK_DATA_PORT);
+}
+
+/* Return the time that has passed since
+ * the system booting.
+ *
+ * The time is expressed in seconds
+ */
+uint32_t uptime() {
+    return uptime_in_seconds;
 }

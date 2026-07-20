@@ -40,6 +40,14 @@ void console_putbytes(const char *s, int len) {
         char_treatment(s[i]);
 }
 
+uint32_t cursor_line() {
+    return current_cursor_line;
+}
+
+uint32_t cursor_column() {
+    return current_cursor_col;
+}
+
 void update_cursor_on_screen(uint32_t line, uint32_t col) {
     current_cursor_line = line;
     current_cursor_col = col;
@@ -104,11 +112,10 @@ static void char_treatment(char c) {
             }
             // Horizontal tab HT
             case 9: {
-                current_cursor_col = current_cursor_col + (8 - (current_cursor_col % 8));
-
-                if (current_cursor_col == SCREEN_WIDTH) {
-                    current_cursor_line++;
-                    current_cursor_col = 0;
+                uint8_t nbr_of_spaces = 8 - (current_cursor_col % 8);
+                while(nbr_of_spaces) {
+                    char_treatment(' ');
+                    nbr_of_spaces--;
                 }
                 break;
             }
