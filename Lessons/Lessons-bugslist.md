@@ -1,7 +1,7 @@
 # Bugbuster list
 
-
-
+This is a list of bugs, but more important a list of bug's explanations
+and solution to track the knowledge I learnt solving the bugs of this project.
 ## Screen driver bugs
 
 **Cursor placement and incorrect data type pointer**
@@ -60,7 +60,7 @@ Source:https://stackoverflow.com/questions/17764661/multiple-definition-of-linke
 
 ## Struct initialization and assignment
 
-**Context**
+#### **Context**
 
 When Initializing my process data struct, I have to **initialize** the value of that process **stack pointer register** `esp` to point into the top of its own **stack**. 
 And also that stack top should have the **return address** where the program should start (or resume), once a context switch has been done.
@@ -68,18 +68,17 @@ And also that stack top should have the **return address** where the program sho
 At the end of the context switch, when the `ret` instruction is executed, the value pointed by `esp` is **pop** onto the **program counter** to indicate the next instruction to execute.
 
 
-**Bug Observation***
 
-
+**Bug Observation**: 
 A process struct had the following fields:
-
+```
 Process
 |
 |--------> register_table[5] // register_table[1] corresponds to ESP value.
 |
 |
 |--------> call_stack[512] // call_stack[511] is the top of the stack
-
+```
 
 At initialization:
 
@@ -121,7 +120,60 @@ Instead of creating a struct and passsing it to the initialization function.
 I passed the pointer to the corresponding case of os_processes[].
 
 
+## Stack Overflow - Stack restoration bug
+
+This is the biggest bug I've ever attacked in this context.
+
+### **Context**
+
+
+While working on the **dynamic process creation** I found an indeterministic crash. The program worked, but could crash with apparently subtle changes like
+
+1. declaring a variable 
+2. Replacing a variable for another one on a function call.
+
+**Observation**: This little changes resulted on a crash on the program.
+
+I was not happy by just living the project on a state of "working" with really luck more than understanding.
+
+
+On that context, I debugged and found out the trouble maker could be on the ```new_process()``` function but without any reason on why.
+
+### **Explaining**
+ 
+ I was doing a really funny stack overflow
+
+I had a Process Control Block array, with each control block containing the dedicated stack zone of each process (512 cases of 4 bytes each = 2048 bytes). Each stack, being by logic, smaller than the whole size of the control block (2100 bytes).
+
+**Corruption process**
+
+1. `Process 4` is created.
+2. `Process 4` is about to spawn another process with `new_process()`
+3. `new_process()` call reserves stack space for the local variables. 
+4. There is a variable `process` of type `struct Process` declared inside `new_process()`
+5. Size of variable `process` is bigger than `Process 4`'s stack space 
+5. `Stack pointer` results on pointing to `Process 3`
+6. `Process 4's return address` corruption happens when calling `sprintf(...)`
 
 
 
+**Conclusion**: `process` variable corrupted the adjacent Process 3 stack allocated on the PCB array. Explaining perfectly the bug.
+ 
+ ### **Solution**
 
+I created an struct Process and assigned to the corresponding PCB array slot that already had a memory allocated for the struct.
+
+Once I stopped allocating the struct, and instead used a pointer to the already reserved PCB array slot to initialize it, every problem dissapeared, my little kernel was finally functional.
+
+This was the final step for the solution!
+I'm proud.
+
+### **Learnings**
+1.  Dont allocate big structs on a limited stack size.
+ This was the original bug I had in my project 5 years ago. I just checked it.
+2.  Learning how the stack worked, and how function calls work in assembly, saved this project.
+
+### For more information
+
+1. Check the [Security section]() on the [Call stack](https://en.wikipedia.org/wiki/Call_stack) wiki page
+2. Check [Stack buffer overflow](https://en.wikipedia.org/wiki/Stack_buffer_overflow)
