@@ -33,7 +33,7 @@ void proc2() {
     for (int i = 0; i < 2; i++) {
         printf("[time = %u] process: %s pid = %i\n", uptime(),
         name(), pid());
-        sleep(10);
+        sleep(20);
     }
     int32_t pid = new_process("PROC 12", proc1);
     if (pid == -1) {
@@ -45,7 +45,21 @@ void proc3() {
     for (int i = 0; i < 10; i++) {
         printf("[time = %u] process: %s pid = %i\n", uptime(),
         name(), pid());
-        sleep(5);
+        // bugged the third time  it passed through here (t = 18) why
+        // To solve the bugg, the esp for some reason is set at os_processes+8280 instead of +8296 that should be the right value.
+        // He ended up reading garbage and jumping the ip into a random address.
+        // check the third sleep, and all the proc 3 sleeps THIS WAS THE KEY
+        //
+        // Stablished a watch on 0x119978 (os_processes+8280), this allowed me to know when this memory case
+        // was rewritten
+        //
+        // FOUND BUG on new_process function.
+        // Probably process name creation of proc 5 corrupts the stack of proc 3
+        // Maybe not enough space
+        //
+        // Find alternatives
+        // static variables, more stack size, STUDY <3
+        sleep(6);
     }
     int32_t pid = new_process("PROC 13", proc1);
     if (pid == -1) {

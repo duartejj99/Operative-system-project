@@ -5,12 +5,15 @@
 #include "inttypes.h"
 #include "time.h"
 #include "stdio.h"
+#include "cpu.h"
 #define MAX_NUM_OF_PROCESSES 5
 
 extern void ctx_sw(int32_t * old_context, int32_t * new_context);
 
 struct Process os_processes[MAX_NUM_OF_PROCESSES];
 int32_t number_of_processes_created = 0;
+int32_t free_place = 0;
+
 struct Process * active_process = &os_processes[0];
 static void idle_process_initialization(struct Process * p);
 static void wake_up_sleeping_processes();
@@ -61,9 +64,12 @@ int32_t new_process(char * name,  void (*process_fn)()) {
     // TODO: choose free slot policy is always pointing to the first cases first
     // Is it a desirable behavior?
     number_of_processes_created++;
+
+    // Verify that the esp is not accessing addresses outside its dedicated stack
+    // Verify at the beginning and at the end.
+
     assert(name != 0);
     assert(process_fn != 0);
-    int free_place;
     for (free_place = 1; free_place < MAX_NUM_OF_PROCESSES; free_place++){
         enum process_state process_state = os_processes[free_place].state;
         if (process_state == UNINITIALIZED || process_state == ZOMBIE)
@@ -71,17 +77,15 @@ int32_t new_process(char * name,  void (*process_fn)()) {
     }
     if (free_place  >= MAX_NUM_OF_PROCESSES)
         return -1;
-    char name_for_real[20] = "";
-    sprintf(name_for_real, "PROC %d", number_of_processes_created);
+
     struct Process *process = &os_processes[free_place];
-    *process =(struct Process){
-        .pid = number_of_processes_created,
-        .state = READY,
-        .register_table = {0,0,0,0,0},
-        .call_stack = {0},
-        .waking_time = 0,
-    };
-    strcpy(process->name, name_for_real);
+    process->pid = free_place;
+    sprintf(process->name, "PROC %d", free_place);
+    process->state = READY;
+    memset(process->register_table, 0, NUMBER_OF_REGISTERS * 4); // 4 bytes each register
+    memset(process->call_stack, 0, PROCESS_STACK_SIZE * 4); // for bytes each stack case
+    process->waking_time = 0;
+
     process->call_stack[PROCESS_STACK_SIZE-2] = (uint32_t)process_fn;
     process->call_stack[PROCESS_STACK_SIZE-1] = (uint32_t)end_process;
     process->register_table[ESP] = (uint32_t) &process->call_stack[PROCESS_STACK_SIZE-2];
@@ -102,7 +106,7 @@ void setup_scheduler() {
  * Setup idle process data
  */
 static void idle_process_initialization(struct Process *p) {
-    strcpy(p->name, "IDLE");
+    strcpy(p->name, "IDLE 0");
     p->pid = 0;
     p->state = CHOSEN;
 }
@@ -110,7 +114,9 @@ static void idle_process_initialization(struct Process *p) {
 void sleep(uint32_t number_of_seconds) {
     active_process->waking_time = uptime() + number_of_seconds;
     active_process->state = SLEEPING;
-    schedule();
+    sti();
+    hlt();
+    // schedule();
 }
 
 void wake_up_sleeping_processes(){
@@ -133,7 +139,7 @@ void display_processes_state(){
     for (int i = 0; i < MAX_NUM_OF_PROCESSES; i++) {
         name = os_processes[i].name;
         state = process_state_name[os_processes[i].state];
-        printf("[%s\t] pid = %i\tstate: %s\t\n", name, i, state);
+        printf("[%s\t] pid = %i\tstate: %s\t\t\n", name, i, state);
     }
     update_cursor_on_screen(line, column);
 }
