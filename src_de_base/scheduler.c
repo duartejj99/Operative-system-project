@@ -17,13 +17,33 @@ static void idle_process_initialization(struct Process * p);
 static void wake_up_sleeping_processes();
 static void display_processes_state();
 static void end_process();
+static int32_t next_process_pid();
+static void update_active_process_state(int32_t chosen_pid);
 
 void schedule() {
-    int32_t chosen_process_pid = 0;
-    struct Process * chosen_process;
     struct Process * current_process = g_active_process;
 
     wake_up_sleeping_processes();
+    int32_t chosen_pid = next_process_pid();
+    if (chosen_pid < 0)
+        return;
+
+    update_active_process_state(chosen_pid);
+    display_processes_state();
+    ctx_sw((int32_t *)current_process->register_table, (int32_t *)g_active_process->register_table);
+}
+
+void update_active_process_state(int32_t chosen_pid){
+    // Current Process
+    if (g_active_process->state == CHOSEN) // If Sleeping or Zombie don't put on Ready queue
+        g_active_process->state = READY;  // active process
+    // Next Process
+    g_active_process = &g_process_control_block_table[chosen_pid]; // update active_process pointer
+    g_active_process->state = CHOSEN;
+}
+
+int32_t next_process_pid() {
+    int32_t chosen_process_pid = 0;
 
     // choose next process
     // TODO: Change policy, we began always to search in order of the fixed array
@@ -36,18 +56,11 @@ void schedule() {
     }
     // we didnt find an activable process.
     if (chosen_process_pid >= MAX_NUM_OF_PROCESSES) {
-        return;
+        return -1;
     }
     assert(chosen_process_pid < MAX_NUM_OF_PROCESSES);
-    chosen_process = &g_process_control_block_table[chosen_process_pid];
 
-    // Update processes states
-    if (g_active_process->state != SLEEPING && g_active_process->state != ZOMBIE)
-        g_active_process->state = READY;  // active process
-    chosen_process->state = CHOSEN; // next active process
-    g_active_process = &g_process_control_block_table[chosen_process_pid]; // update active_process pointer
-    display_processes_state();
-    ctx_sw((int32_t *)current_process->register_table, (int32_t *)chosen_process->register_table);
+    return chosen_process_pid;
 }
 
 /*
