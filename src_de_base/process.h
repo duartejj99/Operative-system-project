@@ -38,3 +38,5 @@ struct Process {
   int32_t call_stack[PROCESS_STACK_SIZE];
   uint32_t waking_time;
 };
+
+void end_process();

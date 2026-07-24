@@ -5,124 +5,32 @@
 #include "inttypes.h"
 #include "time.h"
 #include "stdio.h"
-#define MAX_NUM_OF_PROCESSES 5
+#include "scheduler.h"
 
 extern void ctx_sw(int32_t * old_context, int32_t * new_context);
 
-static struct Process g_process_control_block_table[MAX_NUM_OF_PROCESSES];
-static struct Process * g_active_process = &g_process_control_block_table[0];
-static int32_t g_number_of_processes_spawned = 0;
+struct Process g_process_control_block_table[MAX_NUM_OF_PROCESSES];
+struct Process * g_active_process = &g_process_control_block_table[0];
+int32_t g_number_of_processes_spawned = 0;
 
-static void idle_process_initialization(struct Process * p);
 static void wake_up_sleeping_processes();
 static void display_processes_state();
-static void end_process();
 static int32_t next_process_pid();
 static void update_active_process_state(int32_t chosen_pid);
 
-void schedule() {
-    struct Process * current_process = g_active_process;
-
-    wake_up_sleeping_processes();
-    int32_t chosen_pid = next_process_pid();
-    if (chosen_pid < 0)
-        return;
-
-    update_active_process_state(chosen_pid);
-    display_processes_state();
-    ctx_sw((int32_t *)current_process->register_table, (int32_t *)g_active_process->register_table);
-}
-
-void update_active_process_state(int32_t chosen_pid){
-    // Current Process
-    if (g_active_process->state == CHOSEN) // If Sleeping or Zombie don't put on Ready queue
-        g_active_process->state = READY;  // active process
-    // Next Process
-    g_active_process = &g_process_control_block_table[chosen_pid]; // update active_process pointer
-    g_active_process->state = CHOSEN;
-}
-
-int32_t next_process_pid() {
-    int32_t chosen_process_pid = 0;
-
-    // choose next process
-    // TODO: Change policy, we began always to search in order of the fixed array
-    // We could begin to search from the pid immediatly after the active process id
-    // and finish searching on the pid before our active process id.
-    while(chosen_process_pid < MAX_NUM_OF_PROCESSES) {
-        if (g_process_control_block_table[chosen_process_pid].state == READY)
-            break;
-        chosen_process_pid++;
-    }
-    // we didnt find an activable process.
-    if (chosen_process_pid >= MAX_NUM_OF_PROCESSES) {
-        return -1;
-    }
-    assert(chosen_process_pid < MAX_NUM_OF_PROCESSES);
-
-    return chosen_process_pid;
-}
-
 /*
- * Creates a new process.
- * Leaving it ready to been executed
- * when chosen by the scheduler.
- *
- * Returns the process identifier (pid)
- * For more details: see `Lessons-pc-archi.md`
+ * Initialize idle process as the first active process
  */
-int32_t new_process(char * name,  void (*process_fn)()) {
-    // TODO: choose free slot policy is always pointing to the first cases first
-    // Is it a desirable behavior?
-    g_number_of_processes_spawned++;
-    uint32_t free_place = 0;
-
-    // Verify that the esp is not accessing addresses outside its dedicated stack
-    // Verify at the beginning and at the end.
-
-    assert(name != 0);
-    assert(process_fn != 0);
-    for (free_place = 1; free_place < MAX_NUM_OF_PROCESSES; free_place++){
-        enum process_state process_state = g_process_control_block_table[free_place].state;
-        if (process_state == UNINITIALIZED || process_state == ZOMBIE)
-            break;
-    }
-    if (free_place  >= MAX_NUM_OF_PROCESSES)
-        return -1;
-
-    struct Process *process = &g_process_control_block_table[free_place];
-    process->pid = g_number_of_processes_spawned;
-    sprintf(process->name, "PROC %d", g_number_of_processes_spawned);
-    process->state = READY;
-    memset(process->register_table, 0, NUMBER_OF_REGISTERS * 4); // 4 bytes each register
-    memset(process->call_stack, 0, PROCESS_STACK_SIZE * 4); // for bytes each stack case
-    process->waking_time = 0;
-
-    process->call_stack[PROCESS_STACK_SIZE-2] = (uint32_t)process_fn;
-    process->call_stack[PROCESS_STACK_SIZE-1] = (uint32_t)end_process;
-    process->register_table[ESP] = (uint32_t) &process->call_stack[PROCESS_STACK_SIZE-2];
-
-    return process->pid;
-}
-
-void end_process() {
-    g_active_process->state = ZOMBIE;
-    schedule();
-}
-
 void setup_scheduler() {
-    idle_process_initialization(&g_process_control_block_table[0]);
+    struct Process * idle = &g_process_control_block_table[0];
+    strcpy(idle->name, "IDLE 0");
+    idle->pid = 0;
+    idle->state = CHOSEN;
 }
 
 /*
- * Setup idle process data
+ * Sleeps a process during a `number_of_seconds`.
  */
-static void idle_process_initialization(struct Process *p) {
-    strcpy(p->name, "IDLE 0");
-    p->pid = 0;
-    p->state = CHOSEN;
-}
-
 void sleep(uint32_t number_of_seconds) {
     g_active_process->waking_time = uptime() + number_of_seconds;
     g_active_process->state = SLEEPING;
@@ -140,19 +48,6 @@ void wake_up_sleeping_processes(){
     }
 }
 
-void display_processes_state(){
-    char * name;
-    const char * state;
-    uint32_t line = cursor_line();
-    uint32_t column = cursor_column();
-    update_cursor_on_screen(0, 0);
-    for (int i = 0; i < MAX_NUM_OF_PROCESSES; i++) {
-        name = g_process_control_block_table[i].name;
-        state = process_state_name[g_process_control_block_table[i].state];
-        printf("[%s\t] pid = %i\tstate: %s\t\t\n", name, i, state);
-    }
-    update_cursor_on_screen(line, column);
-}
 
 /*
  * Returns the active process name
@@ -166,4 +61,64 @@ char *name() {
  */
 int32_t pid() {
     return g_active_process->pid;
+}
+
+/*
+ * Choose and run the next process on the machine,
+ * saving the state of current process being executed
+ * and restoring the chosen process state when it was stopped.
+ *
+ * This last part is known as a context switch.
+ */
+void schedule() {
+    struct Process * current_process = g_active_process;
+
+    wake_up_sleeping_processes();
+    int32_t chosen_pid = next_process_pid();
+    if (chosen_pid < 0) return;
+    update_active_process_state(chosen_pid);
+    display_processes_state();
+
+    ctx_sw((int32_t *)current_process->register_table, (int32_t *)g_active_process->register_table);
+}
+
+void update_active_process_state(int32_t chosen_pid){
+    // Current Process
+    if (g_active_process->state == CHOSEN) // If Sleeping or Zombie don't put on Ready queue
+        g_active_process->state = READY;  // active process
+    // Next Process
+    g_active_process = &g_process_control_block_table[chosen_pid]; // update active_process pointer
+    g_active_process->state = CHOSEN;
+}
+
+int32_t next_process_pid() {
+    int32_t chosen_process_pid = g_active_process->pid;
+    int32_t process_counter = MAX_NUM_OF_PROCESSES;
+
+    while(process_counter >= 0) {
+        if (g_process_control_block_table[chosen_process_pid].state == READY)
+            break;
+        chosen_process_pid = (chosen_process_pid + 1) % MAX_NUM_OF_PROCESSES;
+        process_counter--;
+    }
+
+    if (process_counter < 0) {
+        // we didnt find an activable process.
+        return -1;
+    }
+    return chosen_process_pid;
+}
+
+void display_processes_state(){
+    char * name;
+    const char * state;
+    uint32_t line = cursor_line();
+    uint32_t column = cursor_column();
+    update_cursor_on_screen(0, 0);
+    for (int i = 0; i < MAX_NUM_OF_PROCESSES; i++) {
+        name = g_process_control_block_table[i].name;
+        state = process_state_name[g_process_control_block_table[i].state];
+        printf("[%s\t] pid = %i\tstate: %s\t\t\n", name, i, state);
+    }
+    update_cursor_on_screen(line, column);
 }
