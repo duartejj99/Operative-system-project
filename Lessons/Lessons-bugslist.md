@@ -175,5 +175,5 @@ I'm proud.
 
 ### For more information
 
-1. Check the [Security section]() on the [Call stack](https://en.wikipedia.org/wiki/Call_stack) wiki page
+1. Check the [Security section](https://en.wikipedia.org/wiki/Call_stack) on the [Call stack](https://en.wikipedia.org/wiki/Call_stack) wiki page
 2. Check [Stack buffer overflow](https://en.wikipedia.org/wiki/Stack_buffer_overflow)
