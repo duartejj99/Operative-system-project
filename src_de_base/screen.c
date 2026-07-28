@@ -4,6 +4,20 @@
 #include <screen.h>
 #include "debug.h"
 
+enum color {
+    BLACK = 0,
+    BLUE = 1,
+    GREEN = 2,
+    CYAN = 3,
+    RED = 4,
+    MAGENTA = 5,
+    BROWN = 6,
+    GRAY = 7,
+    LIGHT_GREEN = 10
+};
+const enum color CHAR_COLOR = LIGHT_GREEN;
+const uint8_t CHARACTER_CONFIG = 0x00 | CHAR_COLOR;
+
 static const uint16_t VGA_COMMAND_PORT = 0x3D4;
 static const uint16_t VGA_DATA_PORT = 0x3D5;
 
@@ -155,7 +169,7 @@ static void write_char(uint32_t line, uint32_t col, char c) {
     uint16_t * mem_zone = screen_memory_address_at(line, col);
     // [0,  000,     1111]
     // [0,  WHITE,   BLACK]
-    uint16_t char_format = 0x0F;    // high byte is the config
+    uint16_t char_format = CHARACTER_CONFIG;    // high byte is the config
     *mem_zone = (char_format << 8) + (uint8_t)c; // Low byte is the char
 }
 
