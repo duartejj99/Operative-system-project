@@ -5,6 +5,7 @@
 #include "stdio.h"
 #include "time.h"
 #include "scheduler.h"
+#include "process.h"
 
 void idle() {
     for (;;) {
@@ -72,7 +73,7 @@ void kernel_start(void)
     clean_screen();
     printf("\n\n\n\n\n\nMalika, I implemented printf ;) habibi\n");
     // Interruption initialization
-    init_pit_interruption_config();
+    start_system_time();
     setup_scheduler();
 
     int32_t pid = new_process("PROC 1", proc1);
