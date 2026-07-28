@@ -19,7 +19,7 @@ static int32_t next_process_pid();
 static void update_active_process_state(int32_t chosen_pid);
 
 /*
- * Initialize idle process as the first active process
+ * Initialize idle process control block
  */
 void setup_scheduler() {
     struct Process * idle = &g_process_control_block_table[0];
@@ -36,18 +36,6 @@ void sleep(uint32_t number_of_seconds) {
     g_active_process->state = SLEEPING;
     schedule();
 }
-
-void wake_up_sleeping_processes(){
-    for(int pid = 1; pid < MAX_NUM_OF_PROCESSES; pid ++) {
-        if (g_process_control_block_table[pid].state != SLEEPING)
-            continue;
-
-        if (g_process_control_block_table[pid].waking_time <= uptime()) {
-            g_process_control_block_table[pid].state = READY;
-        }
-    }
-}
-
 
 /*
  * Returns the active process name
@@ -82,6 +70,20 @@ void schedule() {
     ctx_sw((int32_t *)current_process->register_table, (int32_t *)g_active_process->register_table);
 }
 
+void wake_up_sleeping_processes(){
+    for(int pid = 1; pid < MAX_NUM_OF_PROCESSES; pid ++) {
+        if (g_process_control_block_table[pid].state != SLEEPING)
+            continue;
+
+        if (g_process_control_block_table[pid].waking_time <= uptime()) {
+            g_process_control_block_table[pid].state = READY;
+        }
+    }
+}
+
+/*
+ * Set chosen process as the active process
+ */
 void update_active_process_state(int32_t chosen_pid){
     // Current Process
     if (g_active_process->state == CHOSEN) // If Sleeping or Zombie don't put on Ready queue
@@ -91,6 +93,11 @@ void update_active_process_state(int32_t chosen_pid){
     g_active_process->state = CHOSEN;
 }
 
+/*
+ * Choose the next process to be activated
+ *
+ * Return the pid of the next chosen process
+ */
 int32_t next_process_pid() {
     int32_t chosen_process_pid = g_active_process->pid;
     int32_t process_counter = MAX_NUM_OF_PROCESSES;
@@ -109,6 +116,9 @@ int32_t next_process_pid() {
     return chosen_process_pid;
 }
 
+/*
+ * Display all the process info on the screen.
+ */
 void display_processes_state(){
     char * name;
     const char * state;
