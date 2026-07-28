@@ -25,6 +25,8 @@ const uint8_t SCREEN_WIDTH = 80;
 static const uint8_t SCREEN_HEIGHT = 25;
 static const uint32_t VIDEO_MEMORY_ADDR_START = 0xB8000;
 
+
+
 // Here I will detail the specifications of the screen we are working with.
 // The screen is a 80 col x 25 lines grid. [25 lines x 80 cols] = 2000 cells
 // Each cell is composed by 2 bytes : 1 byte for the character + 1 byte for the format
@@ -40,9 +42,11 @@ static const uint32_t VIDEO_MEMORY_ADDR_START = 0xB8000;
 //
 // bit 15 always to zero, the clignotement doesnt work well.
 //
-//
-
-static uint32_t current_cursor_line = 0, current_cursor_col = 0;
+/*
+ * Line upon which printf starts writing on the screen
+ */
+const uint32_t CURSOR_BEGIN_LINE = 6;
+static uint32_t current_cursor_line = CURSOR_BEGIN_LINE, current_cursor_col = 0;
 
 static uint16_t *screen_memory_address_at(uint32_t line, uint32_t col);
 static void write_char(uint32_t line, uint32_t col, char c);
@@ -74,14 +78,13 @@ void clean_screen() {
         for (int c = 0; c < SCREEN_WIDTH; c++)
         write_char(l, c, ' ');
     }
-    update_cursor_on_screen(0, 0);
+    update_cursor_on_screen(CURSOR_BEGIN_LINE, 0);
 }
 
-
 void scrolling() {
-    void * screen_part_to_copy = screen_memory_address_at(1, 0);
-    void * screen_begin = screen_memory_address_at(0, 0);
-    uint32_t screen_data_size_to_copy = (SCREEN_HEIGHT - 1) * SCREEN_WIDTH * 2;
+    void * screen_part_to_copy = screen_memory_address_at(CURSOR_BEGIN_LINE + 1, 0);
+    void * screen_begin = screen_memory_address_at(CURSOR_BEGIN_LINE, 0);
+    uint32_t screen_data_size_to_copy = (SCREEN_HEIGHT - CURSOR_BEGIN_LINE) * SCREEN_WIDTH * 2;
     memmove(screen_begin, screen_part_to_copy, screen_data_size_to_copy);
     // delete the last screen line
     for (int col = 0; col < SCREEN_WIDTH; col++){
@@ -103,7 +106,7 @@ static void char_treatment(char c) {
 
         if (current_cursor_col == SCREEN_WIDTH - 1) {
             if (current_cursor_line == SCREEN_HEIGHT - 1)
-                current_cursor_line = 0;
+                scrolling();
             current_cursor_line++;
             current_cursor_col = 0;
         } else {
@@ -136,14 +139,16 @@ static void char_treatment(char c) {
             // Line feed LF
             case 10: {
                 current_cursor_col = 0;
-                current_cursor_line = (current_cursor_line + 1) % SCREEN_HEIGHT;
+                if (current_cursor_line == SCREEN_HEIGHT - 1)
+                    scrolling();
+                current_cursor_line++;
                 break;
             }
             // Form feed FF
             case 12: {
                 clean_screen();
                 current_cursor_col = 0;
-                current_cursor_line = 0;
+                current_cursor_line = CURSOR_BEGIN_LINE;
                 break;
             }
             // Carriage return CR
