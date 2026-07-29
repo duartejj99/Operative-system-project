@@ -122,13 +122,15 @@ int32_t next_process_pid() {
 void display_processes_state(){
     char * name;
     const char * state;
+    int32_t pid;
     uint32_t line = cursor_line();
     uint32_t column = cursor_column();
     update_cursor_on_screen(0, 0);
     for (int i = 0; i < MAX_NUM_OF_PROCESSES; i++) {
         name = g_process_control_block_table[i].name;
+        pid = g_process_control_block_table[i].pid;
         state = process_state_name[g_process_control_block_table[i].state];
-        printf("[%s\t] pid = %i\tstate: %s\t\t\n", name, i, state);
+        printf("[%s\t] pid = %i\tstate: %s\t\t\n", name, pid, state);
     }
     update_cursor_on_screen(line, column);
 }
