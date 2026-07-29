@@ -45,7 +45,7 @@ Also, I genuinely believe the ENSIMAG learning program makes you a well-prepared
 
 ## Next steps
 
-This project has a continuation where besides what is done here. There are:
+This project will have a continuation where aside what is done here. There will be:
 
 1. A more complex scheduler policy
 2. Complex relationships between processes and its children processes
@@ -53,3 +53,15 @@ This project has a continuation where besides what is done here. There are:
 4. Separation between kernel mode and user mode
 5. Virtual memory mechanism.
 6. Syscalls development.
+
+
+The continuation is specified on the [PCSEA course](https://ensimag.grenoble-inp.fr/fr/formation/projet-de-conception-de-syst-egrave-me-d-exploitation-approfondissement-4mmpcsea) at Ensimag.
+
+## References
+1. For more info about the project: [Ensimag's operation system project](https://ensimag.grenoble-inp.fr/fr/formation/projet-de-conception-de-syst-egrave-mes-d-exploitation-fondements-4mmpcsef)
+2. For more info about the interruption configuration: [Programmable Interval Timer](https://wiki.osdev.org/Programmable_Interval_Timer)
+3. For more info about the stack architecture: [Stack architecture on x86](https://wiki.osdev.org/Stack)
+4. For more info about the stack architecture and calling conventions: [Stack architecture on x86](https://wiki.osdev.org/Stack)
+5. For more info about how functions are executed on CPU: [How CPUs Run Functions](https://youtu.be/7YyALikxAlU?si=yEGeB4k6L4uRCAZe)
+6. For more information on stack buffer overflow: [Stack buffer overflow](https://en.wikipedia.org/wiki/Stack_buffer_overflow)
+7. For more information about context switching: [Context switching](https://wiki.osdev.org/Context_Switching)
