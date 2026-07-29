@@ -26,13 +26,30 @@ After this steps you can continue the execution in gdb and play around with brea
 
 ## Why to do this project?
 
-First, I want to begin with a look to the answer to this question given by Mr Mounié, a specialized professor on Operative Systems:
-
->"L’algorithme joue un rôle crucial dans la performance d’un programme, mais ce n’est pas le seul facteur. Les interactions du programme avec le matériel peuvent changer son temps d’exécution de plusieurs ordres de grandeurs, jusqu’à ralentir votre programme d’un facteur 1000 ou 10000. Toutes les interactions avec le matériel passent par le système d’exploitation, y compris les caches du processeur, pour des problèmes de couleurs dans les caches multi-voies. Il faut donc les comprendre pour éviter de “programmer contre son camp”, et être capable de comprendre ce qui se passe." - Gregory Mounié
+First, I would to begin with a quote from Grégory Mounié, professor of Operating Systems at ENSIMAG:
 
 
-That been said, I took this project again because it forced me to learn C, computer architecture, program fundamentals, and Operative system theory in order to understand the project and what I was doing (the last one was for fun).
+> _"Algorithmics plays a crucial role on a program performance, but is not the only factor. The program's interactions with hardware can change its execution time on a x1000 or x10000 factor. All the interactions with the hardware layer goes through the operating system ...  Therefore, it is mandatory to understand them in order to avoid "programming against one's own field" and being able to comprehend what happens"_ - **Mr Gregory Mounié**
+
+
+
+That been said, I took this project again because it forced me to dive into learn **C**, **computer architecture**, got deeper in **programs fundamentals**, and **Operative system theory** in order to understand the project and what I was doing.
+
+
+By understanding as well the ideas that Mr Mounié points at, I would be able to better analyze concepts as performance and security as the result of the orchestrator role attribued to an OS. For example, understanding problematics such as cache miss issues, or ```syscalls``` and ```ctx_sw``` overhead issues.
+
+### Ensimag's influence
 
 Also, I genuinely believe the ENSIMAG learning program makes you a well-prepared professional. Therefore, I thought by finishing the project, I could learn more than the first time, renforcing and completing my current knowledge on the already mentionned aspects.
 
-By understanding as well the ideas that Mr Mounié points at, I would be able to better analyze concepts as performance. Being conscious of problematics such as cache miss issues, or syscall and ctx_sw overhead issues. As well as the role on performance, security, orchestrator attribued to an Operative System.
+
+## Next steps
+
+This project has a continuation where besides what is done here. There are:
+
+1. A more complex scheduler policy
+2. Complex relationships between processes and its children processes
+3. Communication system between processes
+4. Separation between kernel mode and user mode
+5. Virtual memory mechanism.
+6. Syscalls development.
